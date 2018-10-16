@@ -34,7 +34,27 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       m.vm.network :private_network, ip: "192.168.43.#{master[1]}"
 
       m.vm.provision :shell, inline: SCRIPT
-      m.vm.provision "docker", images: ["busybox"]
+      m.vm.provision "docker" do |d|
+        d.run "quay.io/coreos/etcd:v3.2.24",
+          auto_assign_name: false,
+          daemonize: true,
+          cmd: [
+            "/usr/local/bin/etcd",
+            "--data-dir=/etcd-data --name node1",
+            "--initial-advertise-peer-urls http://192.168.43.#{master[1]}:2380",
+            "--listen-peer-urls http://192.168.43.#{master[1]}:2380",
+            "--advertise-client-urls http://192.168.43.#{master[1]}:2379",
+            "--listen-client-urls http://192.168.43.#{master[1]}:2379",
+            "--initial-cluster node1=http://192.168.43.#{master[1]}:2380",
+          ].join(' '),
+          args: [
+            "--name etcd",
+            "-p 2379:2379",
+            "-p 2380:2380",
+            "--net=host",
+            "--volume=/var/lib/etcd:/etcd-data",
+          ].join(' ')
+      end
     end
   end
 
