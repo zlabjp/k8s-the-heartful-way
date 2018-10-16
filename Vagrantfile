@@ -21,6 +21,14 @@ SCRIPT = <<-EOF
 echo "#{public_key}" >> ~vagrant/.ssh/authorized_keys
 EOF
 
+KUBECTL_INSTALLER = <<-EOF
+KUBECTL_PATH=/usr/local/bin/kubectl
+if [[ ! -f ${KUBECTL_PATH} ]]; then
+  curl -L https://storage.googleapis.com/kubernetes-release/release/v1.12.1/bin/linux/amd64/kubectl > ${KUBECTL_PATH}
+  chmod +x ${KUBECTL_PATH}
+fi
+EOF
+
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "ubuntu/bionic64"
 
@@ -34,6 +42,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       m.vm.network :private_network, ip: "192.168.43.#{master[1]}"
 
       m.vm.provision :shell, inline: SCRIPT
+      m.vm.provision :shell, inline: KUBECTL_INSTALLER
       m.vm.provision :shell, path: "scripts/gen-certs.sh"
       m.vm.provision :shell, path: "scripts/gen-kubeconfig.sh"
       m.vm.provision "docker" do |d|
@@ -113,6 +122,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       w.vm.network :private_network, ip: "192.168.43.#{worker[1]}"
 
       w.vm.provision :shell, inline: SCRIPT
+      w.vm.provision :shell, inline: KUBECTL_INSTALLER
       w.vm.provision "docker", images: ["busybox"]
     end
   end
