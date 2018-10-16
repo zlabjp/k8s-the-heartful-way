@@ -36,6 +36,13 @@ if [[ ! -f ${KUBECTL_PATH} ]]; then
 fi
 EOF
 
+COPY_KUBECONFIG_FROM_MASTER = <<-EOF
+mkdir -p ~vagrant/.kube
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+  192.168.43.101:/etc/kubernetes/admin.yaml ~vagrant/.kube/config
+chown -R vagrant:vagrant ~vagrant/.kube
+EOF
+
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "ubuntu/bionic64"
 
@@ -130,6 +137,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
       w.vm.provision :shell, inline: SCRIPT
       w.vm.provision :shell, inline: KUBECTL_INSTALLER
+      w.vm.provision :shell, inline: COPY_KUBECONFIG_FROM_MASTER
       w.vm.provision "docker", images: ["busybox"]
     end
   end
