@@ -25,7 +25,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "ubuntu/bionic64"
 
   [[:master01, 101]].each do |master|
-    config.vm.define master[0] do |w|
+    config.vm.define master[0] do |m|
       m.vm.hostname = master[0].to_s
       m.vm.provider "virtualbox" do |v, override|
         v.customize ["modifyvm", :id, "--memory", "2048"]
