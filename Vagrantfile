@@ -36,6 +36,15 @@ if [[ ! -f ${KUBECTL_PATH} ]]; then
 fi
 EOF
 
+CNI_INSTALLER = <<-EOF
+CNI_PATH=/opt/cni/bin
+if [[ ! -f ${CNI_PATH}/bridge ]]; then
+  mkdir -p ${CNI_PATH}
+  curl -L https://github.com/containernetworking/plugins/releases/download/v0.7.1/cni-plugins-amd64-v0.7.1.tgz > cni-plugin.tgz
+  tar zxvf cni-plugin.tgz -C ${CNI_PATH}
+fi
+EOF
+
 COPY_KUBECONFIG_FROM_MASTER = <<-EOF
 mkdir -p ~vagrant/.kube
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
@@ -137,6 +146,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
       w.vm.provision :shell, inline: SCRIPT
       w.vm.provision :shell, inline: KUBECTL_INSTALLER
+      w.vm.provision :shell, inline: CNI_INSTALLER
       w.vm.provision :shell, inline: COPY_KUBECONFIG_FROM_MASTER
       w.vm.provision "docker", images: ["busybox"]
     end
