@@ -35,6 +35,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
       m.vm.provision :shell, inline: SCRIPT
       m.vm.provision :shell, path: "scripts/gen-certs.sh"
+      m.vm.provision :shell, path: "scripts/gen-kubeconfig.sh"
       m.vm.provision "docker" do |d|
         d.run "quay.io/coreos/etcd:v3.2.24",
           auto_assign_name: false,
