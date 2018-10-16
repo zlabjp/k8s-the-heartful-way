@@ -31,7 +31,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         v.customize ["modifyvm", :id, "--memory", "2048"]
       end
 
-      m.vm.network :private_network, ip: "192.168.43.#{worker[1]}"
+      m.vm.network :private_network, ip: "192.168.43.#{master[1]}"
 
       m.vm.provision :shell, inline: SCRIPT
       m.vm.provision "docker", images: ["busybox"]
