@@ -56,6 +56,49 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             "--volume=/var/lib/etcd:/etcd-data",
           ].join(' ')
       end
+      m.vm.provision "docker" do |d|
+        d.run "gcr.io/google_containers/hyperkube:v1.12.1",
+        auto_assign_name: false,
+        daemonize: true,
+        cmd: [
+          "/hyperkube",
+          "apiserver",
+          "--authorization-mode=Node,RBAC",
+          "--advertise-address=192.168.43.101",
+          "--allow-privileged=true",
+          "--bind-address=0.0.0.0",
+          "--client-ca-file=/etc/kubernetes/secrets/ca.crt",
+          "--enable-bootstrap-token-auth=true",
+          "--etcd-servers=http://192.168.43.101:2379",
+          "--insecure-port=0",
+          # "--kubelet-certificate-authority=/etc/kubernetes/secrets/ca.crt",
+          # "--kubelet-client-certificate=/etc/kubernetes/secrets/kubelet-client.crt",
+          # "--kubelet-client-key=/etc/kubernetes/secrets/kubelet-client.key",
+          # "--proxy-client-cert-file=/etc/kubernetes/secrets/front-proxy-client.crt",
+          # "--proxy-client-key-file=/etc/kubernetes/secrets/front-proxy-client.key",
+          # "--requestheader-client-ca-file=/etc/kubernetes/secrets/front-proxy-ca.crt",
+          # "--requestheader-allowed-names=aggregator",
+          # "--requestheader-extra-headers-prefix=X-Remote-Extra-",
+          # "--requestheader-group-headers=X-Remote-Group",
+          # "--requestheader-username-headers=X-Remote-User",
+          "--secure-port=6443",
+          # "--service-account-key-file=/etc/kubernetes/secrets/service-account.pub",
+          "--service-cluster-ip-range=10.254.0.0/16",
+          "--tls-cert-file=/etc/kubernetes/secrets/apiserver.crt",
+          "--tls-private-key-file=/etc/kubernetes/secrets/apiserver.key",
+          "--kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname",
+          "--v=2"
+        ].join(' '),
+        args: [
+          "--name apiserver",
+          "-p 6443:6443",
+          "--net=host",
+          "--volume=/etc/kubernetes:/etc/kubernetes",
+          "--volume=/etc/ca-certificates:/etc/ca-certificates",
+          "--volume=/usr/share/ca-certificates:/usr/share/ca-certificates",
+          "--volume=/usr/local/share/ca-certificates:/usr/local/share/ca-certificates",
+        ].join(' ')
+      end
     end
   end
 
