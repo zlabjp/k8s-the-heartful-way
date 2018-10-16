@@ -36,6 +36,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       m.vm.provision :shell, inline: SCRIPT
       m.vm.provision "docker", images: ["busybox"]
     end
+  end
 
   [[:node01, 111], [:node02, 112]].each do |worker|
     config.vm.define worker[0] do |w|
