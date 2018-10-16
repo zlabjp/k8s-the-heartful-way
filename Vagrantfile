@@ -18,23 +18,8 @@ end
 open(CLUSTER_PRIVATE_KEY) {|io| cluster_ssh_private_key = io.read}
 open(CLUSTER_PUBLIC_KEY) {|io| cluster_ssh_public_key = io.read}
 
-public_key = nil
-[ENV['SSH_PUBLIC_KEY'], "~/.ssh/id_rsa.pub", "~/.ssh/id_dsa.pub"].each do |p_key|
-  if p_key
-    p_key = File.expand_path(p_key)
-    if File.file?(p_key)
-      public_key = open(p_key).read
-      break
-    end
-  end
-end
-
-unless public_key
-  raise "Please specify ssh public key using following env: SSH_PUBLIC_KEY"
-end
 
 SCRIPT = <<-EOF
-echo "#{public_key}" >> ~vagrant/.ssh/authorized_keys
 echo "#{cluster_ssh_public_key}" >> ~vagrant/.ssh/authorized_keys
 echo "#{cluster_ssh_private_key}" > ~vagrant/.ssh/id_rsa
 echo "#{cluster_ssh_public_key}" > ~root/.ssh/authorized_keys
