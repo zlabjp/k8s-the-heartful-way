@@ -3,7 +3,7 @@ kind: Pod
 metadata:
   name: nginx
 spec:
-  schedulerName: human
+  schedulerName: human-scheduler
   containers:
   - image: nginx:1.14
     name: nginx
