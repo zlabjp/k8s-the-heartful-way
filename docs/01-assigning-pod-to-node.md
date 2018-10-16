@@ -19,13 +19,14 @@ Nodes を取得する。
 
 ```bash
 $ curl -s http://127.0.0.1:8001/api/v1/nodes | jq -r '.items[] | .metadata.name'
-minikube
+alice
+bob
 ```
 
-`minikube` node に `nginx` Pod をアサインする。
+`alice` node に `nginx` Pod をアサインする。
 
 ```bash
-$ NAMESPACE="default" POD_NAME="nginx" NODE_NAME="minikube"
+$ NAMESPACE="default" POD_NAME="nginx" NODE_NAME="alice"
 $ cat <<EOL | tee nginx-binding.yaml
 apiVersion: v1
 kind: Binding
@@ -45,5 +46,5 @@ $ curl -X POST -H "Content-Type: application/yaml" --data-binary @nginx-binding.
   },
   "status": "Success",
   "code": 201
-}%
+}
 ```
