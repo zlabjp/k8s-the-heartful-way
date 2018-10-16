@@ -19,19 +19,30 @@ open(CLUSTER_PRIVATE_KEY) {|io| cluster_ssh_private_key = io.read}
 open(CLUSTER_PUBLIC_KEY) {|io| cluster_ssh_public_key = io.read}
 
 
-SCRIPT = <<-EOF
+SCRIPT = <<-SCRIPT
 echo "#{cluster_ssh_public_key}" >> ~vagrant/.ssh/authorized_keys
 echo "#{cluster_ssh_private_key}" > ~vagrant/.ssh/id_rsa
 echo "#{cluster_ssh_public_key}" > ~root/.ssh/authorized_keys
 echo "#{cluster_ssh_private_key}" > ~root/.ssh/id_rsa
 chmod 700 ~root/.ssh
 chmod 600 ~root/.ssh/id_rsa
-EOF
+
+# Update /etc/hosts
+if [[ ! -f /etc/hosts.bak ]]; then
+  cp /etc/hosts /etc/hosts.bak
+fi
+cp /etc/hosts.bak /etc/hosts
+cat <<EOL >> /etc/hosts
+192.168.43.101 master01
+192.168.43.111 alice
+192.168.43.112 bob
+EOL
+SCRIPT
 
 KUBECTL_INSTALLER = <<-EOF
 KUBECTL_PATH=/usr/local/bin/kubectl
 if [[ ! -f ${KUBECTL_PATH} ]]; then
-  curl -L https://storage.googleapis.com/kubernetes-release/release/v1.12.1/bin/linux/amd64/kubectl > ${KUBECTL_PATH}
+  curl -s -L https://storage.googleapis.com/kubernetes-release/release/v1.12.1/bin/linux/amd64/kubectl > ${KUBECTL_PATH}
   chmod +x ${KUBECTL_PATH}
 fi
 EOF
@@ -126,7 +137,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     end
   end
 
-  [[:node01, 111], [:node02, 112]].each do |worker|
+  [[:alice, 111], [:bob, 112]].each do |worker|
     config.vm.define worker[0] do |w|
       w.vm.hostname = worker[0].to_s
       w.vm.provider "virtualbox" do |v, override|
@@ -141,5 +152,4 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       w.vm.provision "docker", images: ["busybox"]
     end
   end
-
 end
