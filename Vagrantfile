@@ -2,6 +2,22 @@
 # vi: set ft=ruby :
 VAGRANTFILE_API_VERSION = "2"
 
+require 'openssl'
+
+ROOT_DIR = File.dirname(__FILE__)
+
+CLUSTER_PRIVATE_KEY = ROOT_DIR + "/id_rsa"
+CLUSTER_PUBLIC_KEY  = ROOT_DIR + "/id_rsa.pub"
+cluster_ssh_private_key = nil
+cluster_ssh_public_key = nil
+
+unless File.file?(CLUSTER_PRIVATE_KEY)
+  `ssh-keygen -t rsa -N "" -b 4096 -f #{ROOT_DIR}/id_rsa`
+end
+
+open(CLUSTER_PRIVATE_KEY) {|io| cluster_ssh_private_key = io.read}
+open(CLUSTER_PUBLIC_KEY) {|io| cluster_ssh_public_key = io.read}
+
 public_key = nil
 [ENV['SSH_PUBLIC_KEY'], "~/.ssh/id_rsa.pub", "~/.ssh/id_dsa.pub"].each do |p_key|
   if p_key
@@ -19,6 +35,12 @@ end
 
 SCRIPT = <<-EOF
 echo "#{public_key}" >> ~vagrant/.ssh/authorized_keys
+echo "#{cluster_ssh_public_key}" >> ~vagrant/.ssh/authorized_keys
+echo "#{cluster_ssh_private_key}" > ~vagrant/.ssh/id_rsa
+echo "#{cluster_ssh_public_key}" > ~root/.ssh/authorized_keys
+echo "#{cluster_ssh_private_key}" > ~root/.ssh/id_rsa
+chmod 700 ~root/.ssh
+chmod 600 ~root/.ssh/id_rsa
 EOF
 
 KUBECTL_INSTALLER = <<-EOF
