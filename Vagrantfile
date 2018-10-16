@@ -3,11 +3,19 @@
 VAGRANTFILE_API_VERSION = "2"
 
 require 'openssl'
+require 'fileutils'
 
 ROOT_DIR = File.dirname(__FILE__)
+CACHE_DIR = ROOT_DIR + "/cache"
+
+FileUtils.mkdir_p(CACHE_DIR)
 
 CLUSTER_PRIVATE_KEY = ROOT_DIR + "/id_rsa"
 CLUSTER_PUBLIC_KEY  = ROOT_DIR + "/id_rsa.pub"
+
+KUBECTL_CACHE = File.join(CACHE_DIR, 'kubectl')
+CNI_PLUGIN_CACHE = File.join(CACHE_DIR, 'cni-plugin.tgz')
+
 cluster_ssh_private_key = nil
 cluster_ssh_public_key = nil
 
@@ -18,6 +26,13 @@ end
 open(CLUSTER_PRIVATE_KEY) {|io| cluster_ssh_private_key = io.read}
 open(CLUSTER_PUBLIC_KEY) {|io| cluster_ssh_public_key = io.read}
 
+unless File.file?(KUBECTL_CACHE)
+  `curl -s -L https://storage.googleapis.com/kubernetes-release/release/v1.12.1/bin/linux/amd64/kubectl > #{KUBECTL_CACHE}`
+end
+
+unless File.file?(CNI_PLUGIN_CACHE)
+  `curl -L https://github.com/containernetworking/plugins/releases/download/v0.7.1/cni-plugins-amd64-v0.7.1.tgz > #{CNI_PLUGIN_CACHE}`
+end
 
 SCRIPT = <<-SCRIPT
 echo "#{cluster_ssh_public_key}" >> ~vagrant/.ssh/authorized_keys
@@ -42,7 +57,7 @@ SCRIPT
 KUBECTL_INSTALLER = <<-EOF
 KUBECTL_PATH=/usr/local/bin/kubectl
 if [[ ! -f ${KUBECTL_PATH} ]]; then
-  curl -s -L https://storage.googleapis.com/kubernetes-release/release/v1.12.1/bin/linux/amd64/kubectl > ${KUBECTL_PATH}
+  cp /vagrant/cache/kubectl ${KUBECTL_PATH}
   chmod +x ${KUBECTL_PATH}
 fi
 EOF
@@ -51,8 +66,7 @@ CNI_INSTALLER = <<-EOF
 CNI_PATH=/opt/cni/bin
 if [[ ! -f ${CNI_PATH}/bridge ]]; then
   mkdir -p ${CNI_PATH}
-  curl -L https://github.com/containernetworking/plugins/releases/download/v0.7.1/cni-plugins-amd64-v0.7.1.tgz > cni-plugin.tgz
-  tar zxvf cni-plugin.tgz -C ${CNI_PATH}
+  tar zxvf /vagrant/cache/cni-plugin.tgz -C ${CNI_PATH}
 fi
 EOF
 
