@@ -40,17 +40,27 @@ export CNI_NETNS=$netns
 export CNI_IFNAME=eth0
 /opt/cni/bin/bridge <<EOF
 {
-    "name": "mynet",
+    "cniVersion": "0.3.1",
+    "name": "bridge",
     "type": "bridge",
     "bridge": "cni0",
-    "isDefaultGateway": true,
-    "forceAddress": false,
+    "isGateway": true,
     "ipMasq": true,
-    "hairpinMode": true,
     "ipam": {
         "type": "host-local",
-        "subnet": "10.244.1.0/24"
+        "ranges": [
+          [{"subnet": "10.244.1.0/24"}]
+        ],
+        "routes": [{"dst": "0.0.0.0/0"}]
     }
+}
+EOF
+
+export CNI_IFNAME=lo
+/opt/cni/bin/loopback <<EOF
+{
+    "cniVersion": "0.3.1",
+    "type": "loopback"
 }
 EOF
 ```
