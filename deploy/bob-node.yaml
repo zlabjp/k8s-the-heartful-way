@@ -3,4 +3,4 @@ kind: Node
 metadata:
   name: bob
 spec:
-  podCIDR: 10.244.1.0/24
+  podCIDR: 10.244.2.0/24
