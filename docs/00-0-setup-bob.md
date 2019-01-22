@@ -1,6 +1,14 @@
-# ノードに pod が割り当てられたので pause コンテナー作成します
+アリスより前にボブのノードをセットアップしておく必要がある。
 
-## pause コンテナ起動
+## ネットワーク割り当て
+
+```bash
+ip route add 10.244.1.0/24 via 192.168.43.111 # Alice のマシン
+```
+
+## ボブの nginx コンテナ作成
+
+### pause container
 
 ```bash
 # TODO: labels
@@ -10,11 +18,18 @@ docker run -d \
     k8s.gcr.io/pause:3.1
 ```
 
-## コンテナネットワークへ参加
+### nginx container
 
 ```bash
-sudo su
+docker run -d \
+    --network container:k8s_POD_default-nginx \
+    --name k8s_nginx_nginx_default \
+    nginx:1.14
+```
 
+### pod ip 割り当て
+
+```bash
 pid=$(docker inspect -f '{{ .State.Pid }}' k8s_POD_default-nginx)
 netns=/proc/$pid/ns/net
 export CNI_PATH=/opt/cni/bin
@@ -35,7 +50,7 @@ export CNI_IFNAME=eth0
     "ipam": {
         "type": "host-local",
         "ranges": [
-          [{"subnet": "10.244.1.0/24"}]
+          [{"subnet": "10.244.2.0/24"}]
         ],
         "routes": [{"dst": "0.0.0.0/0"}]
     }
@@ -49,21 +64,4 @@ export CNI_IFNAME=lo
     "type": "loopback"
 }
 EOF
-```
-
-## nginx 起動
-
-```bash
-docker run -d \
-    --network container:k8s_POD_default-nginx \
-    --name k8s_nginx_nginx_default \
-    nginx:1.14
-```
-
-```
-docker run -d \
-    --network container:k8s_POD_default-nginx \
-    --name test \
-    busybox \
-    sleep 10000
 ```
