@@ -52,6 +52,7 @@ cat <<EOL >> /etc/hosts
 192.168.43.111 alice
 192.168.43.112 bob
 EOL
+iptables -P FORWARD ACCEPT
 SCRIPT
 
 KUBECTL_INSTALLER = <<-EOF
@@ -165,6 +166,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       w.vm.hostname = worker[0].to_s
       w.vm.provider "virtualbox" do |v, override|
         v.customize ["modifyvm", :id, "--memory", "2048"]
+        v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
       end
 
       w.vm.network :private_network, ip: "192.168.43.#{worker[1]}"
