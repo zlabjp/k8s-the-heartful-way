@@ -22,6 +22,7 @@ export CNI_COMMAND=ADD
 export PATH=$CNI_PATH:$PATH
 export CNI_CONTAINERID=k8s_POD_default-nginx
 export CNI_NETNS=$netns
+export POD_SUBNET=$(kubectl get node alice -o jsonpath="{.spec.podCIDR}")
 
 export CNI_IFNAME=eth0
 /opt/cni/bin/bridge <<EOF
@@ -35,7 +36,7 @@ export CNI_IFNAME=eth0
     "ipam": {
         "type": "host-local",
         "ranges": [
-          [{"subnet": "10.244.1.0/24"}]
+          [{"subnet": "${POD_SUBNET}"}]
         ],
         "routes": [{"dst": "0.0.0.0/0"}]
     }
