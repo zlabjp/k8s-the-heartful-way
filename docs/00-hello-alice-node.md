@@ -20,47 +20,7 @@ Z lab で利用されている Pod のネットワークは、`10.244.0.0/16` �
 ### アリスのマシンにコンテナのネットワークを作る
 
 ```bash
-ip route add 10.244.2.0/24 via 192.168.43.112 # Bob のマシン
+ip route add $(kubectl get node bob -o jsonpath="{.spec.podCIDR}") via 192.168.43.112 # Bob のマシン
 ```
 
 以上！
-
-### 以下メモ
-
-```bash
-contid=test-container
-netns=/var/run/netns/$contid
-ip netns add $contid
-
-export CNI_PATH=/opt/cni/bin
-export CNI_COMMAND=ADD
-export PATH=$CNI_PATH:$PATH
-export CNI_CONTAINERID=$contid
-export CNI_NETNS=$netns
-export CNI_IFNAME=eth0
-/opt/cni/bin/bridge <<EOF
-{
-    "cniVersion": "0.3.1",
-    "name": "bridge",
-    "type": "bridge",
-    "bridge": "cni0",
-    "isGateway": true,
-    "ipMasq": true,
-    "ipam": {
-        "type": "host-local",
-        "ranges": [
-          [{"subnet": "10.244.1.0/24"}]
-        ],
-        "routes": [{"dst": "0.0.0.0/0"}]
-    }
-}
-EOF
-
-export CNI_IFNAME=lo
-/opt/cni/bin/loopback <<EOF
-{
-    "cniVersion": "0.3.1",
-    "type": "loopback"
-}
-EOF
-```
