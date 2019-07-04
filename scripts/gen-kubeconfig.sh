@@ -36,3 +36,7 @@ contexts:
   name: kubelet-context
 current-context: kubelet-context
 EOF
+
+mkdir -p ~vagrant/.kube
+cp ${KUBE_CONFIG} ~vagrant/.kube/config
+chown -R vagrant:vagrant ~vagrant/.kube

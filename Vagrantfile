@@ -74,6 +74,12 @@ mkdir -p ~vagrant/.kube
 scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
   192.168.43.101:/etc/kubernetes/admin.yaml ~vagrant/.kube/config
 chown -R vagrant:vagrant ~vagrant/.kube
+mkdir -p ~vagrant/secrets
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+  192.168.43.101:/etc/kubernetes/secrets/admin.key ~vagrant/secrets/user.key
+scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+  192.168.43.101:/etc/kubernetes/secrets/admin.crt ~vagrant/secrets/user.crt
+chown -R vagrant:vagrant ~vagrant/secrets
 EOF
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
@@ -90,6 +96,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
       m.vm.provision :shell, inline: SCRIPT
       m.vm.provision :shell, inline: KUBECTL_INSTALLER
+      m.vm.provision :shell, path: "scripts/install-tools.sh"
       m.vm.provision :shell, path: "scripts/gen-certs.sh"
       m.vm.provision :shell, path: "scripts/gen-kubeconfig.sh"
       m.vm.provision "docker" do |d|
@@ -160,7 +167,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     end
   end
 
-  [[:inajob, 111], [:yuanying, 112]].each do |worker|
+  [[:inajob, 111]].each do |worker|
     config.vm.define worker[0] do |w|
       w.vm.hostname = worker[0].to_s
       w.vm.provider "virtualbox" do |v, override|
@@ -171,11 +178,31 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       w.vm.network :private_network, ip: "192.168.43.#{worker[1]}"
 
       w.vm.provision :shell, inline: SCRIPT
+      w.vm.provision :shell, path: "scripts/install-tools.sh"
       w.vm.provision :shell, inline: KUBECTL_INSTALLER
       w.vm.provision :shell, inline: CNI_INSTALLER
       w.vm.provision :shell, inline: COPY_KUBECONFIG_FROM_MASTER
       w.vm.provision "docker", images: ["busybox"]
-      m.vm.provision :shell, path: "scripts/install-yuanying.sh"
+    end
+  end
+
+  [[:yuanying, 112]].each do |worker|
+    config.vm.define worker[0] do |w|
+      w.vm.hostname = worker[0].to_s
+      w.vm.provider "virtualbox" do |v, override|
+        v.customize ["modifyvm", :id, "--memory", "2048"]
+        v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
+      end
+
+      w.vm.network :private_network, ip: "192.168.43.#{worker[1]}"
+
+      w.vm.provision :shell, inline: SCRIPT
+      w.vm.provision :shell, path: "scripts/install-tools.sh"
+      w.vm.provision :shell, inline: KUBECTL_INSTALLER
+      w.vm.provision :shell, inline: CNI_INSTALLER
+      w.vm.provision :shell, inline: COPY_KUBECONFIG_FROM_MASTER
+      w.vm.provision "docker", images: ["busybox"]
+      w.vm.provision :shell, path: "scripts/install-yuanying-node.sh"
     end
   end
 end

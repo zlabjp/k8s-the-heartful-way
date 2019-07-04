@@ -1,0 +1,43 @@
+# 稲津くんの初仕事
+
+## スケジューラー @master01 node で作業
+
+まず、ノードに割り当たっていないPodを取得します。
+
+```bash
+$ kubectl proxy &
+```
+
+```bash
+$ SCHEDULER_NAME="human-scheduler"
+```
+
+`spec.schedulerName` が `human-scheduler` である、かつ `spec.nodeName` が `null` (ノードに割り当てられていない) Pods を取得する。
+
+```bash
+$ curl -s http://127.0.0.1:8001/api/v1/pods | jq -r --arg SCHEDULER_NAME "$SCHEDULER_NAME" '.items[] | select(.spec.schedulerName == $SCHEDULER_NAME) | select(.spec.nodeName == null) | .metadata.namespace+"/"+.metadata.name'
+default/nginx
+```
+
+ノードを取得する。それじゃあ inajob くんにお願いしようかな！出勤してるようだし！
+
+```
+kubectl get node
+```
+
+`inajob` node に `nginx` Pod をアサインする。
+
+```bash
+$ NAMESPACE="default" POD_NAME="nginx" NODE_NAME="inajob"
+$ cat <<EOL | tee nginx-binding.yaml
+apiVersion: v1
+kind: Binding
+metadata:
+  name: $POD_NAME
+target:
+  apiVersion: v1
+  kind: Node
+  name: $NODE_NAME
+EOL
+$ curl -X POST -H "Content-Type: application/yaml" --data-binary @nginx-binding.yaml "http://127.0.0.1:8001/api/v1/namespaces/${NAMESPACE}/pods/${POD_NAME}/binding"
+```

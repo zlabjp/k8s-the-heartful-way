@@ -6,5 +6,14 @@
 -   inajob/yuanying ノードの起動
 -   yuanying ノードのセットアップ
 
+## Kubernetes
+
+-   admin 用 kubeconfig の場所
+    -   `/etc/kubernetes/admin.yaml`
+-   admin 用、各証明書、鍵の場所
+    -   `/etc/kubernetes/secrets/admin.key`
+    -   `/etc/kubernetes/secrets/amidn.crt`
+-   各ノードには KUBECONFIG が `~vagrant/.kube/config` が配られているので、そのまま `kubectl` が叩ける状態になっている。
+
 ## 注意事項
 - node はたくさん登録されているが、実際にあるノードは yuanying と inajob だけ。
