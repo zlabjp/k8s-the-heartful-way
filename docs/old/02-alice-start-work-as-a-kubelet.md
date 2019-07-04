@@ -8,8 +8,8 @@ cat > alice-ready-patch.json <<EOF
       {
         "lastHeartbeatTime": "$(date --utc +"%Y-%m-%dT%H:%M:%SZ")",
         "message": "Starting work as a kubelet",
-        "reason": "KubeletReady",
-        "status": "True",
+        "reason": "KubeletNotReady",
+        "status": "False",
         "type": "Ready"
       }
     ]
@@ -17,5 +17,8 @@ cat > alice-ready-patch.json <<EOF
 }
 EOF
 
-curl -X PATCH -H "Content-Type: application/strategic-merge-patch+json" --data-binary @alice-ready-patch.json "http://127.0.0.1:8001/api/v1/nodes/alice/status"
+curl -k -X PATCH -H "Content-Type: application/strategic-merge-patch+json" \
+  --key /etc/kubernetes/secrets/admin.key \
+  --cert /etc/kubernetes/secrets/admin.crt \
+  --data-binary @alice-ready-patch.json "https://127.0.0.1:6443/api/v1/nodes/yuanying/status"
 ```

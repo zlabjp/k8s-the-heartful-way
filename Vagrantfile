@@ -27,7 +27,7 @@ open(CLUSTER_PRIVATE_KEY) {|io| cluster_ssh_private_key = io.read}
 open(CLUSTER_PUBLIC_KEY) {|io| cluster_ssh_public_key = io.read}
 
 unless File.file?(KUBECTL_CACHE)
-  `curl -s -L https://storage.googleapis.com/kubernetes-release/release/v1.12.1/bin/linux/amd64/kubectl > #{KUBECTL_CACHE}`
+  `curl -s -L https://storage.googleapis.com/kubernetes-release/release/v1.15.0/bin/linux/amd64/kubectl > #{KUBECTL_CACHE}`
 end
 
 unless File.file?(CNI_PLUGIN_CACHE)
@@ -49,18 +49,16 @@ fi
 cp /etc/hosts.bak /etc/hosts
 cat <<EOL >> /etc/hosts
 192.168.43.101 master01
-192.168.43.111 alice
-192.168.43.112 bob
+192.168.43.111 inajob
+192.168.43.112 yuanying
 EOL
 iptables -P FORWARD ACCEPT
 SCRIPT
 
 KUBECTL_INSTALLER = <<-EOF
 KUBECTL_PATH=/usr/local/bin/kubectl
-if [[ ! -f ${KUBECTL_PATH} ]]; then
-  cp /vagrant/cache/kubectl ${KUBECTL_PATH}
-  chmod +x ${KUBECTL_PATH}
-fi
+cp /vagrant/cache/kubectl ${KUBECTL_PATH}
+chmod +x ${KUBECTL_PATH}
 EOF
 
 CNI_INSTALLER = <<-EOF
@@ -116,12 +114,12 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           ].join(' ')
       end
       m.vm.provision "docker" do |d|
-        d.run "gcr.io/google_containers/hyperkube:v1.12.1",
+        d.run "k8s.gcr.io/hyperkube:v1.15.0",
         auto_assign_name: false,
         daemonize: true,
         cmd: [
           "/hyperkube",
-          "apiserver",
+          "kube-apiserver",
           "--authorization-mode=Node,RBAC",
           "--advertise-address=192.168.43.101",
           "--allow-privileged=true",
@@ -158,10 +156,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           "--volume=/usr/local/share/ca-certificates:/usr/local/share/ca-certificates",
         ].join(' ')
       end
+      m.vm.provision :shell, path: "scripts/install-prerequisite.sh"
     end
   end
 
-  [[:alice, 111], [:bob, 112]].each do |worker|
+  [[:inajob, 111], [:yuanying, 112]].each do |worker|
     config.vm.define worker[0] do |w|
       w.vm.hostname = worker[0].to_s
       w.vm.provider "virtualbox" do |v, override|
@@ -176,6 +175,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       w.vm.provision :shell, inline: CNI_INSTALLER
       w.vm.provision :shell, inline: COPY_KUBECONFIG_FROM_MASTER
       w.vm.provision "docker", images: ["busybox"]
+      m.vm.provision :shell, path: "scripts/install-yuanying.sh"
     end
   end
 end
