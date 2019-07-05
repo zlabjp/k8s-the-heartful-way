@@ -1,0 +1,19 @@
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: kuard
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: kuard
+  template:
+    metadata:
+      labels:
+        app: kuard
+    spec:
+      schedulerName: human-scheduler
+      containers:
+        - name: kuard
+          image: "gcr.io/kuar-demo/kuard-amd64:2"
