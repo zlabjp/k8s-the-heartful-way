@@ -10,7 +10,7 @@ CA_CERT=${KUBE_CERTS_DIR}/ca.crt
 CLIENT_KEY=${KUBE_CERTS_DIR}/admin.key
 CLIENT_CERT=${KUBE_CERTS_DIR}/admin.crt
 
-KUBE_CONFIG=${KUBE_ROOT}/admin.yaml
+KUBE_CONFIG=${KUBE_ROOT}/secrets/admin.yaml
 
 CA_DATA=$(cat ${CA_CERT} | base64 | tr -d '\n')
 CLIENT_CERTS_DATA=$(cat ${CLIENT_CERT} | base64 | tr -d '\n')

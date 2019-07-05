@@ -21,17 +21,8 @@ openssl req -x509 -new -nodes \
             -out "${CA_CERT}" \
             -subj "/CN=kube-ca"
 
-SERVER_SUBJECT="/CN=kube-apiserver"
-SERVER_KEY="${KUBE_CERTS_DIR}/apiserver.key"
-SERVER_CERT_REQ="${KUBE_CERTS_DIR}/apiserver.csr"
-SERVER_CERT="${KUBE_CERTS_DIR}/apiserver.crt"
-SERVER_CERT_CONF="${KUBE_CERTS_DIR}/apiserver.cnf"
-
-SERVER_SANS="DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc,DNS:kubernetes.default.svc.cluster.local"
-SERVER_SANS="${SERVER_SANS},IP:192.168.43.101"
-SERVER_SANS="${SERVER_SANS},IP:127.0.0.1"
-
-cat > ${SERVER_CERT_CONF} <<EOF
+function gen_server_cert() {
+    cat > ${SERVER_CERT_CONF} <<EOF
 [req]
 req_extensions      = v3_req
 distinguished_name  = req_distinguished_name
@@ -43,32 +34,28 @@ extendedKeyUsage    = clientAuth, serverAuth
 subjectAltName      = ${SERVER_SANS}
 EOF
 
-if [[ ! -f ${SERVER_KEY} ]]; then
-    openssl genrsa -out "${SERVER_KEY}" 4096
-fi
+    if [[ ! -f ${SERVER_KEY} ]]; then
+        openssl genrsa -out "${SERVER_KEY}" 4096
+    fi
 
-openssl req -new -key "${SERVER_KEY}" \
-            -out "${SERVER_CERT_REQ}" \
-            -subj "${SERVER_SUBJECT}" \
-            -config ${SERVER_CERT_CONF}
+    openssl req -new -key "${SERVER_KEY}" \
+                -out "${SERVER_CERT_REQ}" \
+                -subj "${SERVER_SUBJECT}" \
+                -config ${SERVER_CERT_CONF}
 
-openssl x509 -req -in "${SERVER_CERT_REQ}" \
-             -CA "${CA_CERT}" \
-             -CAkey "${CA_KEY}" \
-             -CAcreateserial \
-             -CAserial "${CA_SERIAL}" \
-             -out "${SERVER_CERT}" \
-             -days 365 \
-             -extensions v3_req \
-             -extfile ${SERVER_CERT_CONF}
+    openssl x509 -req -in "${SERVER_CERT_REQ}" \
+                -CA "${CA_CERT}" \
+                -CAkey "${CA_KEY}" \
+                -CAcreateserial \
+                -CAserial "${CA_SERIAL}" \
+                -out "${SERVER_CERT}" \
+                -days 365 \
+                -extensions v3_req \
+                -extfile ${SERVER_CERT_CONF}
+}
 
-SUBJECT="/O=system:masters/CN=kubernetes-admin"
-CLIENT_KEY=${KUBE_CERTS_DIR}/admin.key
-CLIENT_CERT_REQ=${KUBE_CERTS_DIR}/admin.csr
-CLIENT_CERT=${KUBE_CERTS_DIR}/admin.crt
-CLIENT_CERT_CONF="${KUBE_CERTS_DIR}/admin.cnf"
-
-cat > ${CLIENT_CERT_CONF} <<EOF
+function gen_client_cert() {
+    cat > ${CLIENT_CERT_CONF} <<EOF
 [req]
 req_extensions = v3_req
 distinguished_name = req_distinguished_name
@@ -79,21 +66,62 @@ keyUsage = nonRepudiation, digitalSignature, keyEncipherment
 extendedKeyUsage = clientAuth
 EOF
 
-if [[ ! -f ${CLIENT_KEY} ]]; then
-    openssl genrsa -out "${CLIENT_KEY}" 4096
-fi
+    if [[ ! -f ${CLIENT_KEY} ]]; then
+        openssl genrsa -out "${CLIENT_KEY}" 4096
+    fi
 
-openssl req -new -key "${CLIENT_KEY}" \
-            -out "${CLIENT_CERT_REQ}" \
-            -subj "${SUBJECT}" \
-            -config ${CLIENT_CERT_CONF}
+    openssl req -new -key "${CLIENT_KEY}" \
+                -out "${CLIENT_CERT_REQ}" \
+                -subj "${CLIENT_SUBJECT}" \
+                -config ${CLIENT_CERT_CONF}
 
-openssl x509 -req -in "${CLIENT_CERT_REQ}" \
-             -CA "${CA_CERT}" \
-             -CAkey "${CA_KEY}" \
-             -CAcreateserial \
-             -CAserial "${CA_SERIAL}" \
-             -out "${CLIENT_CERT}" \
-             -days 365 \
-             -extensions v3_req \
-             -extfile ${CLIENT_CERT_CONF}
+    openssl x509 -req -in "${CLIENT_CERT_REQ}" \
+                -CA "${CA_CERT}" \
+                -CAkey "${CA_KEY}" \
+                -CAcreateserial \
+                -CAserial "${CA_SERIAL}" \
+                -out "${CLIENT_CERT}" \
+                -days 365 \
+                -extensions v3_req \
+                -extfile ${CLIENT_CERT_CONF}
+}
+
+SERVER_SUBJECT="/CN=kube-apiserver"
+SERVER_KEY="${KUBE_CERTS_DIR}/apiserver.key"
+SERVER_CERT_REQ="${KUBE_CERTS_DIR}/apiserver.csr"
+SERVER_CERT="${KUBE_CERTS_DIR}/apiserver.crt"
+SERVER_CERT_CONF="${KUBE_CERTS_DIR}/apiserver.cnf"
+
+SERVER_SANS="DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc,DNS:kubernetes.default.svc.cluster.local"
+SERVER_SANS="${SERVER_SANS},IP:192.168.43.101"
+SERVER_SANS="${SERVER_SANS},IP:127.0.0.1"
+
+gen_server_cert
+
+CLIENT_SUBJECT="/O=system:masters/CN=kubernetes-admin"
+CLIENT_KEY=${KUBE_CERTS_DIR}/admin.key
+CLIENT_CERT_REQ=${KUBE_CERTS_DIR}/admin.csr
+CLIENT_CERT=${KUBE_CERTS_DIR}/admin.crt
+CLIENT_CERT_CONF="${KUBE_CERTS_DIR}/admin.cnf"
+
+gen_client_cert
+
+CLIENT_SUBJECT="/O=system:masters/CN=kubelet-client"
+CLIENT_KEY=${KUBE_CERTS_DIR}/kubelet-client.key
+CLIENT_CERT_REQ=${KUBE_CERTS_DIR}/kubelet-client.csr
+CLIENT_CERT=${KUBE_CERTS_DIR}/kubelet-client.crt
+CLIENT_CERT_CONF="${KUBE_CERTS_DIR}/kubelet-client.cnf"
+
+gen_client_cert
+
+SERVER_SUBJECT="/CN=yuanying"
+SERVER_KEY="${KUBE_CERTS_DIR}/kubelet-yuanying.key"
+SERVER_CERT_REQ="${KUBE_CERTS_DIR}/kubelet-yuanying.csr"
+SERVER_CERT="${KUBE_CERTS_DIR}/kubelet-yuanying.crt"
+SERVER_CERT_CONF="${KUBE_CERTS_DIR}/kubelet-yuanying.cnf"
+
+SERVER_SANS="DNS:yuanying"
+SERVER_SANS="${SERVER_SANS},IP:192.168.43.112"
+SERVER_SANS="${SERVER_SANS},IP:127.0.0.1"
+
+gen_server_cert

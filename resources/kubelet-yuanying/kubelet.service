@@ -1,0 +1,44 @@
+[Unit]
+Description=Kubelet Container
+After=docker.service
+Requires=docker.service
+
+[Service]
+TimeoutStartSec=0
+Restart=always
+ExecReload=/usr/bin/docker restart kubelet
+ExecStartPre=/bin/mkdir -p /vagrant/kubernetes/manifests
+ExecStartPre=/bin/mkdir -p /opt/cni/bin
+ExecStartPre=/bin/mkdir -p /var/lib/kubelet/volumeplugins
+ExecStartPre=-/usr/bin/docker stop kubelet
+ExecStartPre=-/usr/bin/docker rm kubelet
+ExecStartPre=/usr/bin/docker pull  k8s.gcr.io/hyperkube:v1.15.0
+ExecStart=/usr/bin/docker run \
+    --name=kubelet \
+    --volume=/:/rootfs:ro \
+    --volume=/sys:/sys:ro \
+    --volume=/dev:/dev \
+    --volume=/var/lib/docker/:/var/lib/docker:rw \
+    --volume=/var/lib/kubelet/:/var/lib/kubelet:shared \
+    --volume=/var/run:/var/run:rw \
+    --volume=/vagrant/kubernetes:/etc/kubernetes:ro \
+    --volume=/etc/cni/net.d:/etc/cni/net.d:ro \
+    --volume=/opt/cni/bin:/opt/cni/bin:ro \
+    --volume=/run/systemd/resolve:/run/systemd/resolve:ro \
+    --volume=/var/lib/kubelet/volumeplugins:/var/lib/kubelet/volumeplugins:ro \
+    --net=host \
+    --pid=host \
+    --privileged=true \
+    --restart=on-failure:5 \
+     k8s.gcr.io/hyperkube:v1.15.0 \
+    /hyperkube kubelet \
+        --kubeconfig=/etc/kubernetes/secrets/admin.yaml \
+        --config=/var/lib/kubelet/config.yaml \
+        --cni-bin-dir=/opt/cni/bin \
+        --cni-conf-dir=/etc/cni/net.d \
+        --network-plugin=cni \
+        --hostname-override=yuanying \
+        --v=2
+
+[Install]
+WantedBy=multi-user.target

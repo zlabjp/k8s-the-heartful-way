@@ -10,7 +10,7 @@ do
     sleep 5
 done
 
-export KUBECONFIG=/vagrant/kubernetes/admin.yaml
+export KUBECONFIG=/vagrant/kubernetes/secrets/admin.yaml
 
 kubectl apply -f /vagrant/resources/prerequisite/
 MEMBERS="ainoya bhiro hatotaka hiyoshi kkohtaka ladicle mumoshu ryysud shmurata summerwind superbrothers takanariko takuhiro tatsuhiro-t tksm uesyn watawuwu ysakashita"

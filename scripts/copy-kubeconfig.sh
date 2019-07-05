@@ -4,7 +4,7 @@ set -eu
 export LC_ALL=C
 
 mkdir -p ~vagrant/.kube
-cp /vagrant/kubernetes/admin.yaml ~vagrant/.kube/config
+cp /vagrant/kubernetes/secrets/admin.yaml ~vagrant/.kube/config
 chown -R vagrant:vagrant ~vagrant/.kube
 
 mkdir -p ~vagrant/secrets

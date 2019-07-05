@@ -9,7 +9,7 @@
 ## Kubernetes
 
 -   admin 用 kubeconfig の場所
-    -   `/vagrant/kubernetes/admin.yaml`
+    -   `/vagrant/kubernetes/secrets/admin.yaml`
 -   admin 用、各証明書、鍵の場所
     -   `/vagrant/kubernetes/secrets/admin.key`
     -   `/vagrant/kubernetes/secrets/amidn.crt`
