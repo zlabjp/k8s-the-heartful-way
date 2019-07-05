@@ -3,7 +3,7 @@
 set -eu
 export LC_ALL=C
 
-KUBE_ROOT="/etc/kubernetes"
+KUBE_ROOT="/vagrant/kubernetes"
 KUBE_CERTS_DIR="${KUBE_ROOT}/secrets"
 
 CA_CERT=${KUBE_CERTS_DIR}/ca.crt

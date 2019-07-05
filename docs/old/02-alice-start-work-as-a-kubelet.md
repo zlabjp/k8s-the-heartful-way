@@ -18,7 +18,7 @@ cat > alice-ready-patch.json <<EOF
 EOF
 
 curl -k -X PATCH -H "Content-Type: application/strategic-merge-patch+json" \
-  --key /etc/kubernetes/secrets/admin.key \
-  --cert /etc/kubernetes/secrets/admin.crt \
+  --key /vagrant/kubernetes/secrets/admin.key \
+  --cert /vagrant/kubernetes/secrets/admin.crt \
   --data-binary @alice-ready-patch.json "https://127.0.0.1:6443/api/v1/nodes/yuanying/status"
 ```

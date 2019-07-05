@@ -5,7 +5,7 @@ $ vagrant up
 ```
 
 ```
-$ vagrant ssh master01 -c "cat /etc/kubernetes/admin.yaml" > /tmp/admin.yaml
+$ vagrant ssh master01 -c "cat /vagrant/kubernetes/admin.yaml" > /tmp/admin.yaml
 $ export KUBECONFIG=/tmp/admin.yaml
 $ kubectl apply -f ../deploy/
 node/alice created

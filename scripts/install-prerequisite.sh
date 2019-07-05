@@ -10,7 +10,7 @@ do
     sleep 5
 done
 
-export KUBECONFIG=/etc/kubernetes/admin.yaml
+export KUBECONFIG=/vagrant/kubernetes/admin.yaml
 
 kubectl apply -f /vagrant/resources/prerequisite/
 MEMBERS="ainoya bhiro hatotaka hiyoshi kkohtaka ladicle mumoshu ryysud shmurata summerwind superbrothers takanariko takuhiro tatsuhiro-t tksm uesyn watawuwu ysakashita"
@@ -84,14 +84,14 @@ for m in $MEMBERS; do
     ADDRESS_SUFFIX=$(expr ${ADDRESS_SUFFIX} + 1)
     echo ${STATUS}
     curl -k -X PATCH -H "Content-Type: application/strategic-merge-patch+json" \
-        --key /etc/kubernetes/secrets/admin.key \
-        --cert /etc/kubernetes/secrets/admin.crt \
+        --key /vagrant/kubernetes/secrets/admin.key \
+        --cert /vagrant/kubernetes/secrets/admin.crt \
         --data-binary "${STATUS}" "https://127.0.0.1:6443/api/v1/nodes/${m}/status"
 done
 
 STATUS=${READY}
 STATUS=$(echo ${STATUS} | sed -e "s/ADDRESS/192.168.43.112/")
 curl -k -X PATCH -H "Content-Type: application/strategic-merge-patch+json" \
-    --key /etc/kubernetes/secrets/admin.key \
-    --cert /etc/kubernetes/secrets/admin.crt \
+    --key /vagrant/kubernetes/secrets/admin.key \
+    --cert /vagrant/kubernetes/secrets/admin.crt \
     --data-binary "${STATUS}" "https://127.0.0.1:6443/api/v1/nodes/yuanying/status"

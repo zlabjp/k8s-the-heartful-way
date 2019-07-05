@@ -34,54 +34,6 @@ unless File.file?(CNI_PLUGIN_CACHE)
   `curl -L https://github.com/containernetworking/plugins/releases/download/v0.7.1/cni-plugins-amd64-v0.7.1.tgz > #{CNI_PLUGIN_CACHE}`
 end
 
-SCRIPT = <<-SCRIPT
-echo "#{cluster_ssh_public_key}" >> ~vagrant/.ssh/authorized_keys
-echo "#{cluster_ssh_private_key}" > ~vagrant/.ssh/id_rsa
-echo "#{cluster_ssh_public_key}" > ~root/.ssh/authorized_keys
-echo "#{cluster_ssh_private_key}" > ~root/.ssh/id_rsa
-chmod 700 ~root/.ssh
-chmod 600 ~root/.ssh/id_rsa
-
-# Update /etc/hosts
-if [[ ! -f /etc/hosts.bak ]]; then
-  cp /etc/hosts /etc/hosts.bak
-fi
-cp /etc/hosts.bak /etc/hosts
-cat <<EOL >> /etc/hosts
-192.168.43.101 master01
-192.168.43.111 inajob
-192.168.43.112 yuanying
-EOL
-iptables -P FORWARD ACCEPT
-SCRIPT
-
-KUBECTL_INSTALLER = <<-EOF
-KUBECTL_PATH=/usr/local/bin/kubectl
-cp /vagrant/cache/kubectl ${KUBECTL_PATH}
-chmod +x ${KUBECTL_PATH}
-EOF
-
-CNI_INSTALLER = <<-EOF
-CNI_PATH=/opt/cni/bin
-if [[ ! -f ${CNI_PATH}/bridge ]]; then
-  mkdir -p ${CNI_PATH}
-  tar zxvf /vagrant/cache/cni-plugin.tgz -C ${CNI_PATH}
-fi
-EOF
-
-COPY_KUBECONFIG_FROM_MASTER = <<-EOF
-mkdir -p ~vagrant/.kube
-scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-  192.168.43.101:/etc/kubernetes/admin.yaml ~vagrant/.kube/config
-chown -R vagrant:vagrant ~vagrant/.kube
-mkdir -p ~vagrant/secrets
-scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-  192.168.43.101:/etc/kubernetes/secrets/admin.key ~vagrant/secrets/user.key
-scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
-  192.168.43.101:/etc/kubernetes/secrets/admin.crt ~vagrant/secrets/user.crt
-chown -R vagrant:vagrant ~vagrant/secrets
-EOF
-
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "ubuntu/bionic64"
 
@@ -94,8 +46,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
       m.vm.network :private_network, ip: "192.168.43.#{master[1]}"
 
-      m.vm.provision :shell, inline: SCRIPT
-      m.vm.provision :shell, inline: KUBECTL_INSTALLER
+      m.vm.provision :shell, path: "scripts/setup-network.sh"
+      m.vm.provision :shell, path: "scripts/install-kubectl.sh"
       m.vm.provision :shell, path: "scripts/install-tools.sh"
       m.vm.provision :shell, path: "scripts/gen-certs.sh"
       m.vm.provision :shell, path: "scripts/gen-kubeconfig.sh"
@@ -157,7 +109,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
           "--name apiserver",
           "-p 6443:6443",
           "--net=host",
-          "--volume=/etc/kubernetes:/etc/kubernetes",
+          "--volume=/vagrant/kubernetes:/etc/kubernetes",
           "--volume=/etc/ca-certificates:/etc/ca-certificates",
           "--volume=/usr/share/ca-certificates:/usr/share/ca-certificates",
           "--volume=/usr/local/share/ca-certificates:/usr/local/share/ca-certificates",
@@ -177,11 +129,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
       w.vm.network :private_network, ip: "192.168.43.#{worker[1]}"
 
-      w.vm.provision :shell, inline: SCRIPT
+      w.vm.provision :shell, path: "scripts/setup-network.sh"
       w.vm.provision :shell, path: "scripts/install-tools.sh"
-      w.vm.provision :shell, inline: KUBECTL_INSTALLER
-      w.vm.provision :shell, inline: CNI_INSTALLER
-      w.vm.provision :shell, inline: COPY_KUBECONFIG_FROM_MASTER
+      w.vm.provision :shell, path: "scripts/install-kubectl.sh"
+      w.vm.provision :shell, path: "scripts/install-cni.sh"
+      w.vm.provision :shell, path: "scripts/copy-kubeconfig.sh"
       w.vm.provision "docker", images: ["busybox"]
     end
   end
@@ -196,11 +148,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
       w.vm.network :private_network, ip: "192.168.43.#{worker[1]}"
 
-      w.vm.provision :shell, inline: SCRIPT
+      w.vm.provision :shell, path: "scripts/setup-network.sh"
       w.vm.provision :shell, path: "scripts/install-tools.sh"
-      w.vm.provision :shell, inline: KUBECTL_INSTALLER
-      w.vm.provision :shell, inline: CNI_INSTALLER
-      w.vm.provision :shell, inline: COPY_KUBECONFIG_FROM_MASTER
+      w.vm.provision :shell, path: "scripts/install-kubectl.sh"
+      w.vm.provision :shell, path: "scripts/install-cni.sh"
+      w.vm.provision :shell, path: "scripts/copy-kubeconfig.sh"
       w.vm.provision "docker", images: ["busybox"]
       w.vm.provision :shell, path: "scripts/install-yuanying-node.sh"
     end
