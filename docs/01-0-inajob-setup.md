@@ -27,12 +27,12 @@ kubectl get node yuanying -o jsonpath="{.spec.podCIDR}"
 yuanying のノードのアドレスは以下のコマンドで取得できます。
 
 ```
-kubectl get node yuanying -o jsonpath="{.status.addresses[0].address}
+kubectl get node yuanying -o jsonpath="{.status.addresses[0].address}"
 ```
 
 取得したアドレスをルーティングテーブルに追加します。
 ```
-ip route add 10.244.2.0/24 via 192.168.43.112
+sudo ip route add 10.244.2.0/24 via 192.168.43.112
 ```
 
 引き続き、他のメンバーのルーティングも追加する必要がありますが、とりあえず今日のところは、これで大丈夫そうです。

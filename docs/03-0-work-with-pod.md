@@ -71,11 +71,152 @@ docker run -d \
 
 まず、先ほど作った pause コンテナの network namespace を取得します。
 
-```
+```bash
 sudo su # 以降、root で作業
-pid=$(docker inspect -f '{{ .State.Pid }}' k8s_POD_default-nginx)
-netns=/proc/$pid/ns/net
+PID=$(docker inspect -f '{{ .State.Pid }}' k8s_POD_default-nginx)
+NETNS=/proc/${PID}/ns/net
+```
+
+そして、その network namespace に、CNI のブリッジプラグインを使って IP アドレスを付与してあげます。
+CNI は環境変数と標準入力を入力としてバイナリを実行してあげれば良いだけなので手作業にぴったりですね！
+
+```bash
+export CNI_PATH=/opt/cni/bin
+export CNI_COMMAND=ADD
+export CNI_CONTAINERID=k8s_POD_default-nginx
+export CNI_NETNS=${NETNS}
+
+export PATH=$CNI_PATH:$PATH
+export POD_SUBNET=$(kubectl get node inajob -o jsonpath="{.spec.podCIDR}")
+
+export CNI_IFNAME=eth0
+/opt/cni/bin/bridge <<EOF
+{
+    "cniVersion": "0.3.1",
+    "name": "bridge",
+    "type": "bridge",
+    "bridge": "cni0",
+    "isGateway": true,
+    "ipMasq": true,
+    "ipam": {
+        "type": "host-local",
+        "ranges": [
+          [{"subnet": "${POD_SUBNET}"}]
+        ],
+        "routes": [{"dst": "0.0.0.0/0"}]
+    }
+}
+EOF
+
+export CNI_IFNAME=lo
+/opt/cni/bin/loopback <<EOF
+{
+    "cniVersion": "0.3.1",
+    "type": "loopback"
+}
+EOF
+```
+
+(多分、10.244.1.2 がアサインされてる。違ったら以下のアドレスを読み換える。)
+
+ちゃんとアドレスが付与されました、ping して試してみましょう！
+
+```
+# POD_IP の環境変数は以降で利用するのでちゃんと設定しておくこと。
+POD_IP=10.244.1.2
+ping ${POD_IP}
+```
+
+ちゃんと返ってきましたね！
+
+### nginx コンテナの起動
+
+それでは、そもそもの nginx コンテナを起動します。
+ネットワークに先ほど作った pause コンテナを指定してあげることで、
+Pod の IP アドレスを利用することができるようになります。
+
+```bash
+docker run -d \
+    --network container:k8s_POD_default-nginx \
+    --name k8s_nginx_nginx_default \
+    nginx:1.14
+```
+
+### Pod status を更新
+
+無事、Pod が起動しました。ちゃんとPodが起動できたことをapiserverに登録してみんなに知らせましょう。
+この場合は Pod の status を更新すれば ok です。
+
+本来は各 Phase ごとにちゃんとステータスを変更しなければならないと社則で決まっているのですが、
+稲津くんは少し手を抜いたようですね。
+
+```bash
+STATUS=$(cat <<EOF
+{
+  "status": {
+    "conditions": [
+      {
+        "lastProbeTime": null,
+        "lastTransitionTime": "$(date --utc +"%Y-%m-%dT%H:%M:%SZ")",
+        "status": "True",
+        "type": "Initialized"
+      },
+      {
+        "lastProbeTime": null,
+        "lastTransitionTime": "$(date --utc +"%Y-%m-%dT%H:%M:%SZ")",
+        "status": "True",
+        "type": "Ready"
+      },
+      {
+        "lastProbeTime": null,
+        "lastTransitionTime": "$(date --utc +"%Y-%m-%dT%H:%M:%SZ")",
+        "status": "True",
+        "type": "ContainersReady"
+      }
+    ],
+    "containerStatuses": [
+      {
+        "containerID": "human://nginx-0001",
+        "image": "nginx:1.14",
+        "imageID": "docker-pullable://nginx@sha256:96fb261b66270b900ea5a2c17a26abbfabe95506e73c3a3c65869a6dbe83223a",
+        "lastState": {},
+        "name": "nginx",
+        "ready": true,
+        "restartCount": 0,
+        "state": {
+          "running": {
+            "startedAt": "$(date --utc +"%Y-%m-%dT%H:%M:%SZ")"
+          }
+        }
+      }
+    ],
+    "hostIP": "192.168.43.111",
+    "phase": "Running",
+    "podIP": "${POD_IP}",
+    "startTime": "$(date --utc +"%Y-%m-%dT%H:%M:%SZ")"
+  }
+}
+EOF
+)
 ```
 
 
+```bash
+curl -k -X PATCH -H "Content-Type: application/strategic-merge-patch+json" \
+    --key ~vagrant/secrets/user.key \
+    --cert ~vagrant/secrets/user.crt \
+    --data-binary "${STATUS}" "https://192.168.43.101:6443/api/v1/namespaces/default/pods/nginx/status"
+```
 
+Pod が無事、ノードに登録されて実行されました！！
+
+```bash
+kubectl get pods -o wide
+```
+
+#### Memo(From @inajob との雑談):
+
+-   飛行機とかは機械制御を切って人間によってコントロールするような系が非常時のために組み込まれている。
+-   マニュアルで飛行機を飛ばしたことがない人が機長なのは怖い。(by @uesyn)
+-   k8s もマニュアルで飛ばす経験があると非常時に役に立つのでは？
+    -   「例: Scheduler が動かない！手作業でノードにアサインするぞ！」
