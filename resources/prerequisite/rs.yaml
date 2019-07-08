@@ -2,18 +2,18 @@
 apiVersion: apps/v1
 kind: ReplicaSet
 metadata:
-  name: kuard
+  name: web
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: kuard
+      app: web
   template:
     metadata:
       labels:
-        app: kuard
+        app: web
     spec:
       schedulerName: human-scheduler
       containers:
-        - name: kuard
-          image: "gcr.io/kuar-demo/kuard-amd64:2"
+        - name: nginx
+          image: "nginx:1.16"
