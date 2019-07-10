@@ -107,7 +107,7 @@ kubectl get node | grep --color -E "^|^yuanying.*$"
 X社は自由にリモートワークできる組織ですので、もちろんkubeletもリモートで担当することができます。
 
 ```bash
-$ NAMESPACE="default" POD_NAME="kuard" NODE_NAME="yuanying"
+$ NAMESPACE="default" POD_NAME="web-001" NODE_NAME="yuanying"
 $ cat <<EOL | tee web-yuanying-binding.yaml
 apiVersion: v1
 kind: Binding
@@ -134,7 +134,7 @@ kubectl get pod -o wide -w
 できたようです。リモートなのにちゃんと仕事してますね！
 本当はこの場所で一緒にプレゼンする予定だったのですが何故かリモートなんですね。なんででしょう？
 
-まあ、気にせずにちゃんと nginx が反応するか確認してみます。
+まあ、気にせずにちゃんと アプリケーション が反応するか確認してみます。
 
 ```
 kubectl get pod web-001 -o json | \
