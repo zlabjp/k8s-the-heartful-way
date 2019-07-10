@@ -5,6 +5,12 @@
 出勤したらまずはともあれ出勤システムに出勤を記録することになっています。X社ではもちろんそのシステムは Kubernetes です。
 Nodeオブジェクトの status を更新して、Ready にしてやることで通勤になる仕組みです。
 
+現状は、Status Unknown になっています。
+
+```bash
+kubectl get node | grep --color -E "^|inajob.+$"
+```
+
 昨日と同じように status を更新するには curl を利用する必要があります。Readyのステータスは以下のようになります。
 
 ```
@@ -38,5 +44,5 @@ curl -k -X PATCH -H "Content-Type: application/strategic-merge-patch+json" \
 STATUS が Ready になりました。
 
 ```
-kubectl get node
+kubectl get node | grep --color -E "^|inajob.+$"
 ```

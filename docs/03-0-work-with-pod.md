@@ -5,24 +5,23 @@
 まず、ノードに割り当たっていないPodを取得します。
 
 ```bash
-$ kubectl proxy &
-```
-
-```bash
 $ SCHEDULER_NAME="human-scheduler"
 ```
 
 `spec.schedulerName` が `human-scheduler` である、かつ `spec.nodeName` が `null` (ノードに割り当てられていない) Pods を取得する。
 
 ```bash
-$ curl -s http://127.0.0.1:8001/api/v1/pods | jq -r --arg SCHEDULER_NAME "$SCHEDULER_NAME" '.items[] | select(.spec.schedulerName == $SCHEDULER_NAME) | select(.spec.nodeName == null) | .metadata.namespace+"/"+.metadata.name'
+$ curl -s -k https://192.168.43.101:6443/api/v1/pods \
+  --key /vagrant/kubernetes/secrets/admin.key \
+  --cert /vagrant/kubernetes/secrets/admin.crt | \
+  jq -r --arg SCHEDULER_NAME "$SCHEDULER_NAME" '.items[] | select(.spec.schedulerName == $SCHEDULER_NAME) | select(.spec.nodeName == null) | .metadata.namespace+"/"+.metadata.name'
 default/nginx
 ```
 
 ノードを取得する。それじゃあ inajob くんにお願いしようかな！出勤してるようだし！
 
 ```
-kubectl get node
+kubectl get node | grep --color -E "^|inajob.+$"
 ```
 
 `inajob` node に `nginx` Pod をアサインする。
@@ -39,7 +38,17 @@ target:
   kind: Node
   name: $NODE_NAME
 EOL
-$ curl -X POST -H "Content-Type: application/yaml" --data-binary @nginx-binding.yaml "http://127.0.0.1:8001/api/v1/namespaces/${NAMESPACE}/pods/${POD_NAME}/binding"
+$ curl -k -X POST -H "Content-Type: application/yaml" \
+  --data-binary @nginx-binding.yaml \
+  --key /vagrant/kubernetes/secrets/admin.key \
+  --cert /vagrant/kubernetes/secrets/admin.crt \
+  "https://192.168.43.101:6443/api/v1/namespaces/${NAMESPACE}/pods/${POD_NAME}/binding"
+```
+
+アサインされました。
+
+```
+kubectl get pod -o wide | grep --color -E "^|inajob"
 ```
 
 ## Pod を割り当てられた稲津くん @inajob node で作業
@@ -47,7 +56,8 @@ $ curl -X POST -H "Content-Type: application/yaml" --data-binary @nginx-binding.
 StatusがPending、かつ自分に割り当てられたPodを見張ってます。kubectl を使うのか、`kubectl proxy` & `curl` で生リクエストを投げるかは作業者の好みです。
 
 ```
-kubectl get pod --field-selector 'status.phase=Pending,spec.nodeName=inajob' -A
+kubectl get pod \
+  --field-selector 'status.phase=Pending,spec.nodeName=inajob' -A
 ```
 
 nginx が割り当てられてることが確認できました。
@@ -211,7 +221,7 @@ curl -k -X PATCH -H "Content-Type: application/strategic-merge-patch+json" \
 Pod が無事、ノードに登録されて実行されました！！
 
 ```bash
-kubectl get pods -o wide
+kubectl get pods -o wide | grep --color -E "^|Running"
 ```
 
 #### Memo(From @inajob との雑談):

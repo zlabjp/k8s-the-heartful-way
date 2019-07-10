@@ -35,11 +35,25 @@ kubectl get node yuanying -o jsonpath="{.status.addresses[0].address}"
 sudo ip route add 10.244.2.0/24 via 192.168.43.112
 ```
 
+ルーティングテーブルを確認してみましょう。yuanyingが管理しているPodあてのパケットはyuanyingノードにルーティングされていることが確認できました。
+
+```
+ip route | grep --color -E "^|^10\.244\.2\.0.+$"
+```
+
 引き続き、他のメンバーのルーティングも追加する必要がありますが、とりあえず今日のところは、これで大丈夫そうです。
 
 ## ノードの登録 @inajob node で作業
 
 セットアップが完了したので、自分のマシンをノードとして登録します。
+
+X社の社員が管理しているノードは全て `kubectl` コマンドで確認することができます。
+
+```
+kubectl get node
+```
+
+ここに、自分のノードを追加します。
 
 ```
 cat <<EOF | kubectl apply -f -
@@ -58,7 +72,7 @@ EOF
 無事登録されたか確認してみましょう。
 
 ```
-kubectl get nodes -o wide
+kubectl get nodes -o wide | grep --color -E "^|inajob.+$"
 ```
 
 無事、**newbie** として登録されました。(STATUS NotReadyが目立ちますね。)
@@ -106,7 +120,7 @@ curl -k -X PATCH -H "Content-Type: application/strategic-merge-patch+json" \
 無事反映されました。
 
 ```
-kubectl get nodes -o wide
+kubectl get nodes -o wide | grep --color -E "^|inajob.+$"
 ```
 
 これで稲津くんの1日目の仕事は終わりです。
