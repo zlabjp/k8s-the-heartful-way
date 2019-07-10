@@ -23,6 +23,20 @@ EOL
 iptables -P FORWARD ACCEPT
 
 if [[ $(hostname) == "master01" ]]; then
-  ip route add 10.244.1.0/24 via 192.168.43.111 | true
-  ip route add 10.244.2.0/24 via 192.168.43.112 | true
+  cat <<EOF | tee /etc/netplan/50-vagrant.yaml
+---
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp0s8:
+      addresses:
+      - 192.168.43.101/24
+      routes:
+      - to: 10.244.1.0/24
+        via: 192.168.43.111
+      - to: 10.244.2.0/24
+        via: 192.168.43.112
+EOF
+  netplan apply
 fi

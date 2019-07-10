@@ -31,8 +31,22 @@ kubectl get node yuanying -o jsonpath="{.status.addresses[0].address}"
 ```
 
 取得したアドレスをルーティングテーブルに追加します。
-```
-sudo ip route add 10.244.2.0/24 via 192.168.43.112
+
+```bash
+cat <<EOF | sudo tee /etc/netplan/50-vagrant.yaml
+---
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp0s8:
+      addresses:
+      - 192.168.43.111/24
+      routes:
+      - to: 10.244.2.0/24
+        via: 192.168.43.112
+EOF
+sudo netplan apply
 ```
 
 ルーティングテーブルを確認してみましょう。yuanyingが管理しているPodあてのパケットはyuanyingノードにルーティングされていることが確認できました。

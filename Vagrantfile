@@ -135,7 +135,9 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       w.vm.provision :shell, path: "scripts/install-kubectl.sh"
       w.vm.provision :shell, path: "scripts/install-cni.sh"
       w.vm.provision :shell, path: "scripts/copy-kubeconfig.sh"
-      w.vm.provision "docker", images: ["busybox"]
+      w.vm.provision "docker", images: ["nginx:1.14", "k8s.gcr.io/pause:3.1"] do |d|
+        d.build_image "/vagrant/resources/app", args: "-t zlabjp/heartful-app:1"
+      end
       w.vm.provision :shell, inline: "iptables -P FORWARD ACCEPT"
       w.vm.provision :shell, path: "scripts/install-yuanying-node.sh"
     end

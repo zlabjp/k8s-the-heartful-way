@@ -16,4 +16,4 @@ spec:
       schedulerName: human-scheduler
       containers:
         - name: nginx
-          image: "nginx:1.16"
+          image: "zlabjp/heartful-app:1"

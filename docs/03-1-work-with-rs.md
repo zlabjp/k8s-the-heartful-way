@@ -139,7 +139,7 @@ kubectl get pod -o wide -w
 ```
 kubectl get pod web-001 -o json | \
   jq -r ".status.podIP" | \
-  xargs curl
+  xargs -I{} curl {}:8080
 ```
 
 それでは二つ目の Pod はまた、新人の inajob くんに割り当てます。

@@ -21,7 +21,7 @@ NETNS=/proc/${PID}/ns/net
 
 export CNI_PATH=/opt/cni/bin
 export CNI_COMMAND=ADD
-export CNI_CONTAINERID=k8s_POD_default-nginx
+export CNI_CONTAINERID=${PAUSE_CONTAINER}
 export CNI_NETNS=${NETNS}
 
 export PATH=$CNI_PATH:$PATH
@@ -32,7 +32,7 @@ export CNI_IFNAME=eth0
 echo "== Creating pod network device..."
 echo export CNI_PATH=/opt/cni/bin
 echo export CNI_COMMAND=ADD
-echo export CNI_CONTAINERID=k8s_POD_default-nginx
+echo export CNI_CONTAINERID=${PAUSE_CONTAINER}
 echo export CNI_NETNS=${NETNS}
 echo
 echo export PATH=$PATH
@@ -76,7 +76,7 @@ POD_IP=${POD_IP%/24}
 docker run -d \
     --network container:${PAUSE_CONTAINER} \
     --name k8s_${NAME}_${NAME}_default \
-    nginx:1.16
+    zlabjp/heartful-app:1
 
 STATUS=$(cat <<EOF
 {
@@ -104,8 +104,8 @@ STATUS=$(cat <<EOF
     "containerStatuses": [
       {
         "containerID": "human://${NAME}-0001",
-        "image": "nginx:1.16",
-        "imageID": "docker-pullable://nginx@sha256:96fb261b66270b900ea5a2c17a26abbfabe95506e73c3a3c65869a6dbe83223a",
+        "image": "zlabjp/heartful-app:1",
+        "imageID": "docker-pullable://heartful-app@sha256:96fb261b66270b900ea5a2c17a26abbfabe95506e73c3a3c65869a6dbe83223a",
         "lastState": {},
         "name": "${NAME}",
         "ready": true,
