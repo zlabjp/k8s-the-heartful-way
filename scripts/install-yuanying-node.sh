@@ -40,7 +40,10 @@ CONF_DIR=/vagrant/resources/kubelet-yuanying
 mkdir -p /var/lib/kubelet
 cp ${CONF_DIR}/config.yaml /var/lib/kubelet/
 cp ${CONF_DIR}/kubelet.service /etc/systemd/system/
+cp ${CONF_DIR}/kube-proxy.service /etc/systemd/system/
 
 systemctl daemon-reload
 systemctl enable kubelet
+systemctl enable kube-proxy
 systemctl restart kubelet
+systemctl restart kube-proxy

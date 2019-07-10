@@ -1,0 +1,29 @@
+[Unit]
+Description=kube-proxy
+Wants=docker.service
+After=docker.service
+
+[Service]
+ExecStartPre=-/usr/bin/docker stop kube-proxy
+ExecStart=/usr/bin/docker run \
+    --name=kube-proxy \
+    --rm \
+    --net=host \
+    --privileged \
+    -v /vagrant/kubernetes:/etc/kubernetes:ro \
+    -v /usr/share/ca-certificates:/etc/ssl/certs:ro \
+    -v /lib/modules:/lib/modules \
+  k8s.gcr.io/hyperkube:v1.15.0 /hyperkube kube-proxy \
+  --v=2 \
+  --enable-load-reader \
+  --proxy-mode=ipvs  \
+  --healthz-bind-address=0.0.0.0 \
+  --kubeconfig=/etc/kubernetes/secrets/admin.yaml \
+  --cluster-cidr=10.254.0.0/16
+ExecStop=/usr/bin/docker stop kube-proxy
+ExecReload=/usr/bin/docker restart kube-proxy
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
