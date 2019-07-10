@@ -116,10 +116,11 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         ].join(' ')
       end
       m.vm.provision :shell, path: "scripts/install-prerequisite.sh"
+      m.vm.provision :shell, inline: "iptables -P FORWARD ACCEPT"
     end
   end
 
-  [[:inajob, 111]].each do |worker|
+  [[:inajob, 111], [:yuanying, 112]].each do |worker|
     config.vm.define worker[0] do |w|
       w.vm.hostname = worker[0].to_s
       w.vm.provider "virtualbox" do |v, override|
@@ -135,25 +136,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       w.vm.provision :shell, path: "scripts/install-cni.sh"
       w.vm.provision :shell, path: "scripts/copy-kubeconfig.sh"
       w.vm.provision "docker", images: ["busybox"]
-    end
-  end
-
-  [[:yuanying, 112]].each do |worker|
-    config.vm.define worker[0] do |w|
-      w.vm.hostname = worker[0].to_s
-      w.vm.provider "virtualbox" do |v, override|
-        v.customize ["modifyvm", :id, "--memory", "2048"]
-        v.customize ["modifyvm", :id, "--nicpromisc2", "allow-all"]
-      end
-
-      w.vm.network :private_network, ip: "192.168.43.#{worker[1]}"
-
-      w.vm.provision :shell, path: "scripts/setup-network.sh"
-      w.vm.provision :shell, path: "scripts/install-tools.sh"
-      w.vm.provision :shell, path: "scripts/install-kubectl.sh"
-      w.vm.provision :shell, path: "scripts/install-cni.sh"
-      w.vm.provision :shell, path: "scripts/copy-kubeconfig.sh"
-      w.vm.provision "docker", images: ["busybox"]
+      w.vm.provision :shell, inline: "iptables -P FORWARD ACCEPT"
       w.vm.provision :shell, path: "scripts/install-yuanying-node.sh"
     end
   end

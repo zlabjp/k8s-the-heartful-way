@@ -22,7 +22,7 @@ cat <<EOL >> /etc/hosts
 EOL
 iptables -P FORWARD ACCEPT
 
-if [[ $(hostname) == "master" ]]; then
+if [[ $(hostname) == "master01" ]]; then
   ip route add 10.244.1.0/24 via 192.168.43.111 | true
   ip route add 10.244.2.0/24 via 192.168.43.112 | true
 fi
