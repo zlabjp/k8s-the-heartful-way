@@ -54,6 +54,12 @@ subsets:
 EOF
 ```
 
+ちゃんとできたか確認します。
+
+```
+kubectl get endpoints web-service
+```
+
 ## kube-proxy としての稲津くん @inajob node で作業
 
 さて、EndpointとServiceはあるけども、実際にそれらのPodにアクセスしなくちゃいけないのは作業者である稲津くんです。

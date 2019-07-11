@@ -11,11 +11,7 @@ $ SCHEDULER_NAME="human-scheduler"
 `spec.schedulerName` が `human-scheduler` である、かつ `spec.nodeName` が `null` (ノードに割り当てられていない) Pods を取得する。
 
 ```bash
-$ curl -s -k https://192.168.43.101:6443/api/v1/pods \
-  --key /vagrant/kubernetes/secrets/admin.key \
-  --cert /vagrant/kubernetes/secrets/admin.crt | \
-  jq -r --arg SCHEDULER_NAME "$SCHEDULER_NAME" '.items[] | select(.spec.schedulerName == $SCHEDULER_NAME) | select(.spec.nodeName == null) | .metadata.namespace+"/"+.metadata.name'
-default/nginx
+$ kubectl get pod -o custom-columns='Namespace:.metadata.namespace,Name:.metadata.name,Scheduler:.spec.schedulerName,Node:.spec.nodeName'
 ```
 
 ノードを取得する。それじゃあ inajob くんにお願いしようかな！出勤してるようだし！

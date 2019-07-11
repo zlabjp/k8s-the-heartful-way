@@ -91,10 +91,7 @@ $ SCHEDULER_NAME="human-scheduler"
 ```
 
 ```bash
-$ curl -s -k https://192.168.43.101:6443/api/v1/pods \
-  --key /vagrant/kubernetes/secrets/admin.key \
-  --cert /vagrant/kubernetes/secrets/admin.crt | \
-  jq -r --arg SCHEDULER_NAME "$SCHEDULER_NAME" '.items[] | select(.spec.schedulerName == $SCHEDULER_NAME) | select(.spec.nodeName == null) | .metadata.namespace+"/"+.metadata.name'
+kubectl get pod -o custom-columns='Namespace:.metadata.namespace,Name:.metadata.name,Scheduler:.spec.schedulerName,Node:.spec.nodeName'
 ```
 
 先ほど作った Pod が二つ表示されましたね。では、それぞれをノードに割り当てましょう。
@@ -137,9 +134,10 @@ kubectl get pod -o wide -w
 まあ、気にせずにちゃんと nginx が反応するか確認してみます。
 
 ```
-kubectl get pod web-001 -o json | \
-  jq -r ".status.podIP" | \
-  xargs -I{} curl {}:8080
+# PodのIPの取得
+$ POD_IP=$(kubectl get pods  web-001 -o jsonpath='{.status.podIP}')
+
+$ curl -v ${POD_IP}:8080
 ```
 
 それでは二つ目の Pod はまた、新人の inajob くんに割り当てます。
