@@ -22,6 +22,7 @@ ExecStart=/usr/bin/docker run \
     --volume=/var/lib/kubelet/:/var/lib/kubelet:shared \
     --volume=/var/run:/var/run:rw \
     --volume=/vagrant/kubernetes:/etc/kubernetes:ro \
+    --volume=/vagrant/scripts:/vagrant/scripts:ro \
     --volume=/etc/cni/net.d:/etc/cni/net.d:ro \
     --volume=/opt/cni/bin:/opt/cni/bin:ro \
     --volume=/run/systemd/resolve:/run/systemd/resolve:ro \
@@ -31,14 +32,7 @@ ExecStart=/usr/bin/docker run \
     --privileged=true \
     --restart=on-failure:5 \
      k8s.gcr.io/hyperkube:v1.15.0 \
-    /hyperkube kubelet \
-        --kubeconfig=/etc/kubernetes/secrets/admin.yaml \
-        --config=/var/lib/kubelet/config.yaml \
-        --cni-bin-dir=/opt/cni/bin \
-        --cni-conf-dir=/etc/cni/net.d \
-        --network-plugin=cni \
-        --hostname-override=yuanying \
-        --v=2
+     bash /vagrant/scripts/kubelet.sh
 
 [Install]
 WantedBy=multi-user.target
