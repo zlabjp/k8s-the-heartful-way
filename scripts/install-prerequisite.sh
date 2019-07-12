@@ -30,7 +30,7 @@ NOTREADY=$(cat <<EOF
     "nodeInfo": {
       "kubeletVersion": "v1.15.0",
       "osImage": "Human 1.0.zlab",
-      "kernelVersion": "Brain-Z-2019",
+      "kernelVersion": "Brain-Z-YEAR",
       "containerRuntimeVersion": "docker://18.6.3"
     },
     "addresses": [
@@ -58,7 +58,7 @@ READY=$(cat <<EOF
     "nodeInfo": {
       "kubeletVersion": "v1.15.0",
       "osImage": "Human 1.0.zlab",
-      "kernelVersion": "Brain-Z-2019",
+      "kernelVersion": "Brain-Z-YEAR",
       "containerRuntimeVersion": "docker://18.6.3"
     },
     "addresses": [
@@ -75,12 +75,14 @@ EOF
 ADDRESS_SUFFIX=113
 for m in $MEMBERS; do
     ADDRESS="192.168.43.${ADDRESS_SUFFIX}"
+    YEAR=$(( ( RANDOM % 20 )  + 2000 ))
     if (( RANDOM % 2 )); then 
         STATUS=${READY}
     else
         STATUS=${NOTREADY}
     fi
     STATUS=$(echo ${STATUS} | sed -e "s/ADDRESS/${ADDRESS}/")
+    STATUS=$(echo ${STATUS} | sed -e "s/YEAR/${YEAR}/")
     ADDRESS_SUFFIX=$(expr ${ADDRESS_SUFFIX} + 1)
     echo ${STATUS}
     curl -k -X PATCH -H "Content-Type: application/strategic-merge-patch+json" \
