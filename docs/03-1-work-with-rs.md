@@ -8,7 +8,7 @@
 状態が Desired とずれている ReplicaSet を取得します。
 
 ```bash
-kubectl get replicasets -o wide | grep --color -E "^|DESIRED|CURRENT"
+kubectl get replicasets -o wide -A | grep --color -E "^|DESIRED|CURRENT"
 ```
 
 web という名前の ReplicaSets が Desired の状態とずれていることがわかりますね！
@@ -16,7 +16,7 @@ web という名前の ReplicaSets が Desired の状態とずれていること
 それでは実際に条件に合う Pod が存在するか調べて見ましょう。
 
 ```bash
-kubectl get pod -l app=web
+kubectl get pod -l app=web -A
 ```
 
 ありませんね。そこで私、RS controllerという役職の出番です。
