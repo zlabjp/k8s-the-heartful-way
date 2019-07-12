@@ -125,6 +125,8 @@ export CNI_IFNAME=lo
     "type": "loopback"
 }
 EOF
+
+exit # rootの作業終了
 ```
 
 (多分、10.244.1.2 がアサインされてる。違ったら以下のアドレスを読み換える。)
