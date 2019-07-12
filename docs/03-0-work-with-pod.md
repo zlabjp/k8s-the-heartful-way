@@ -18,10 +18,16 @@ $ curl -s -k https://192.168.43.101:6443/api/v1/pods \
 default/nginx
 ```
 
-ノードを取得する。それじゃあ inajob くんにお願いしようかな！出勤してるようだし！
+ノードを取得する。
 
-```
+```bash
 kubectl get node | grep --color -E "^|inajob.+$"
+```
+
+それじゃあ inajob くんにお願いしようかな！出勤してるようだし！
+
+```bash
+kubectl describe node inajob | head -n 14
 ```
 
 `inajob` node に `nginx` Pod をアサインする。

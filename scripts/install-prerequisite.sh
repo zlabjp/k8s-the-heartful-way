@@ -30,7 +30,7 @@ NOTREADY=$(cat <<EOF
     "nodeInfo": {
       "kubeletVersion": "v1.15.0",
       "osImage": "Human 1.0.zlab",
-      "kernelVersion": "Brain-Z-YEAR",
+      "kernelVersion": "4.15.YEAR-brain",
       "containerRuntimeVersion": "docker://18.6.3"
     },
     "addresses": [
@@ -58,7 +58,7 @@ READY=$(cat <<EOF
     "nodeInfo": {
       "kubeletVersion": "v1.15.0",
       "osImage": "Human 1.0.zlab",
-      "kernelVersion": "Brain-Z-YEAR",
+      "kernelVersion": "4.15.YEAR-brain",
       "containerRuntimeVersion": "docker://18.6.3"
     },
     "addresses": [

@@ -20,8 +20,8 @@ STATUS=$(cat <<EOF
     "conditions": [
       {
         "lastHeartbeatTime": "$(date --utc +"%Y-%m-%dT%H:%M:%SZ")",
-        "message": "Starting work as a kubelet",
-        "reason": "KubeletReady",
+        "message": "今日からよろしくお願いします。",
+        "reason": "稲津出社",
         "status": "True",
         "type": "Ready"
       }

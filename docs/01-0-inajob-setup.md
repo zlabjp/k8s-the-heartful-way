@@ -192,8 +192,8 @@ STATUS=$(cat <<EOF
   "status": {
     "nodeInfo": {
       "kubeletVersion": "v1.15.0",
-      "osImage": "Human 1.0.zlab.new",
-      "kernelVersion": "Brain-Z-2019",
+      "osImage": "Human 1.0.new",
+      "kernelVersion": "4.15.2019-brain",
       "containerRuntimeVersion": "docker://18.6.3"
     },
     "addresses": [
