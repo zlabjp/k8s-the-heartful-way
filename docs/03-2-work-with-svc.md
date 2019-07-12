@@ -74,10 +74,23 @@ kubectl get services
 
 サービスのアドレスが `10.254.10.128:80` であることがわかりました。それでは Virtual Server を設定しましょう。
 
-```
-ip addr add 10.254.10.128 dev kube-ipvs0
-ipvsadm -A -t 10.254.10.128:80 -s rr
+その前に、IPVS mode の kube-proxy でも一部の機能で iptables を利用している関係上、
+iptables にサービスのアドレスを教える必要があります。
+
+```bash
 ipset add KUBE-CLUSTER-IP 10.254.10.128,tcp:80
+```
+
+次に、IPVS の設定の一環として、入社時のセットアップで作成した dummy interface にサービスのアドレスを設定します。
+
+```bash
+ip addr add 10.254.10.128 dev kube-ipvs0
+```
+
+そして、IPVS の Virtual Server そのものを作成します。
+
+```bash
+ipvsadm -A -t 10.254.10.128:80 -s rr
 ```
 
 次に、この Virtual Server に紐づく Real Server を設定します。この場合の Real Server はもちろん Pod なのですが、Kubernetes では Endpoint から作成することになっています。
@@ -107,7 +120,3 @@ VIP に対して curl コマンドを実行してみます。
 ```bash
 curl 10.254.10.128
 ```
-
-## ありそうな質問
-
--   Q: なんで Pod から直接じゃなくて、Endpointから kube-proxy はリアルサーバを作成するのか？

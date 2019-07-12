@@ -79,6 +79,8 @@ echo 1 | sudo tee /proc/sys/net/ipv4/vs/conntrack
 
 #### dummy interface の作成
 
+Service のパケットを受ける dummy のインタフェースを作成します。
+
 ```bash
 sudo ip link add kube-ipvs0 type dummy
 ```

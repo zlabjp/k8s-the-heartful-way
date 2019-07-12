@@ -96,16 +96,22 @@ NETNS=/proc/${PID}/ns/net
 そして、その network namespace に、CNI のブリッジプラグインを使って IP アドレスを付与してあげます。
 CNI は環境変数と標準入力を入力としてバイナリを実行してあげれば良いだけなので手作業にぴったりですね！
 
+まず、CNI でインタフェースを作成するのに必要となる環境変数を設定します。 `CNI_COMMAND=ADD` で、CNIに対してインタフェースを作成する、という指示をすることができます。
+
 ```bash
 export CNI_PATH=/opt/cni/bin
 export CNI_COMMAND=ADD
 export CNI_CONTAINERID=k8s_POD_default-nginx
 export CNI_NETNS=${NETNS}
+export CNI_IFNAME=eth0
+```
 
+そして、CNI の bridge プラグインを実行します。
+
+```bash
 export PATH=$CNI_PATH:$PATH
 export POD_SUBNET=$(kubectl get node inajob -o jsonpath="{.spec.podCIDR}")
 
-export CNI_IFNAME=eth0
 /opt/cni/bin/bridge <<EOF
 {
     "cniVersion": "0.3.1",
@@ -123,7 +129,13 @@ export CNI_IFNAME=eth0
     }
 }
 EOF
+```
 
+結果の JSON に Pod の IP が含まれています。
+
+最後に、loopback デバイスを追加してやります。インタフェースの名前以外の環境変数は共通なので使い回しています。
+
+```bash
 export CNI_IFNAME=lo
 /opt/cni/bin/loopback <<EOF
 {
@@ -131,7 +143,11 @@ export CNI_IFNAME=lo
     "type": "loopback"
 }
 EOF
+```
 
+root での作業が終了したので、一般ユーザに戻ります。
+
+```bash
 exit # rootの作業終了
 ```
 
@@ -231,10 +247,3 @@ Pod が無事、ノードに登録されて実行されました！！
 ```bash
 kubectl get pods -o wide | grep --color -E "^|Running"
 ```
-
-#### Memo(From @inajob との雑談):
-
--   飛行機とかは機械制御を切って人間によってコントロールするような系が非常時のために組み込まれている。
--   マニュアルで飛行機を飛ばしたことがない人が機長なのは怖い。(by @uesyn)
--   k8s もマニュアルで飛ばす経験があると非常時に役に立つのでは？
-    -   「例: Scheduler が動かない！手作業でノードにアサインするぞ！」
