@@ -7,7 +7,21 @@ if [[ $(hostname) != "yuanying" ]]; then
     exit
 fi
 
-ip route add 10.244.1.0/24 via 192.168.43.111 | true
+# ip route add 10.244.1.0/24 via 192.168.43.111 | true
+cat <<EOF | tee /etc/netplan/50-vagrant.yaml
+---
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    enp0s8:
+      addresses:
+      - 192.168.43.112/24
+      routes:
+      - to: 10.244.1.0/24
+        via: 192.168.43.111
+EOF
+netplan apply
 
 mkdir -p /etc/cni/net.d
 

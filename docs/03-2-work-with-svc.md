@@ -75,7 +75,9 @@ kubectl get services
 サービスのアドレスが `10.254.10.128:80` であることがわかりました。それでは Virtual Server を設定しましょう。
 
 ```
+ip addr add 10.254.10.128 dev kube-ipvs0
 ipvsadm -A -t 10.254.10.128:80 -s rr
+ipset add KUBE-CLUSTER-IP 10.254.10.128,tcp:80
 ```
 
 次に、この Virtual Server に紐づく Real Server を設定します。この場合の Real Server はもちろん Pod なのですが、Kubernetes では Endpoint から作成することになっています。
