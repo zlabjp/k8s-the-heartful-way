@@ -20,7 +20,7 @@ Kubernetes における基本的なロードバランサは Service と呼ばれ
 -   ipvs mode の場合は、その実装に ipvs を利用する
     -   ただし、Kubernetes の要件により、一部の機能を iptables にフォールバックしている。
 
-![kube-proxy](./assets/kube-proxy-png)
+![kube-proxy](./assets/kube-proxy.png)
 
 ## Endpoint Controller @master01 node で作業
 
