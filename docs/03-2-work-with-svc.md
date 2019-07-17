@@ -1,6 +1,26 @@
 # Service を処理しよう！
 
--   スライドで、Service の説明が必要。
+冗長化されたアプリケーションは通常、ロードバランサによって処理が分散されます。
+Kubernetes における基本的なロードバランサは Service と呼ばれています。
+
+## この章で学ぶこと
+
+-   Service とは
+-   ワーカノードは Service からどのようにロードバランサを設定しているのか
+
+## 解説
+
+### Service
+
+-   (Serviceの適当な説明をしてください、ラベルとかセレクタとか
+
+### kube-proxy
+
+-   kube-proxy はクラスタ内にて Service で宣言されている L4 ロードバランサを各ノードでセットアップするコンポーネント
+-   ipvs mode の場合は、その実装に ipvs を利用する
+    -   ただし、Kubernetes の要件により、一部の機能を iptables にフォールバックしている。
+
+![kube-proxy](./assets/kube-proxy-png)
 
 ## Endpoint Controller @master01 node で作業
 

@@ -25,9 +25,11 @@ Flannel の host-gw モードも同じ仕組みを使って実現しているが
 ### Service network
 
 Z社では、Pod network はトラディショナルな方法を採用しているが、Service networkに関しては先進的な IPVS mode を採用している。
-IPVS modeではパケットのロードバランシングは主に IPVS によって処理されているが、Kubernetes の要件的に必要なマスカレードの処理などを (inajobに詳細は説明済み) iptables を利用して処理している。
+IPVS modeではパケットのロードバランシングは主に IPVS によって処理されているが、Kubernetes の要件的に必要なマスカレードの処理などを (inajobに詳細は説明済み) iptables を利用して処理している。そのため、IPVS mode で必要となる iptables のレコードを Service を処理する前にセットアップしておく必要がある。
 
 ![IPVS packet 01](./assets/ipvs-packet-01.png)
+
+もちろん、これらのセットアップは kube-proxy が行う。
 
 ### Node の登録
 

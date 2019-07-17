@@ -1,5 +1,30 @@
 # ReplicaSets を処理しよう！
 
+アプリケーションの可用性を意識した場合、通常はアプリケーションを冗長化します。
+それだけではなく、処理をスケールアウトしたい場合もあるでしょう。
+アプリケーションの冗長化を宣言するためのKubernetesのリソースがReplicaSetです。
+
+Kubernetes のユーザはもちろん、アプリケーションを冗長化しようとReplicaSetを利用します。
+
+## この章で学ぶこと
+
+-   Kubernetes はもちろん、アプリケーションの冗長性も ReplicaSet というオブジェクトを使って宣言します。
+-   宣言された ReplicaSet は、controller-manager によって処理されます。
+
+## 解説
+
+controller-manager の中にある、ReplicaSet Controller が RS を処理します。処理の流れは以下のようになります。
+
+![RS Controller](./assets/rs-controller-01.png)
+
+![RS Controller](./assets/rs-controller-02.png)
+
+![RS Controller](./assets/rs-controller-03.png)
+
+![RS Controller](./assets/rs-controller-04.png)
+
+![RS Controller](./assets/rs-controller-05.png)
+
 ## RS Controller @master01 node で作業
 
 -   マネージャーも兼任してます、とかウンタラカンタラ。
