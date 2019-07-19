@@ -3,6 +3,9 @@
 set -eu
 export LC_ALL=C
 
+echo "export PS1='\[\e[01;36m\]@\h\[\e[00m\]:\$ '" >> ~vagrant/.bashrc
+echo "export PS1='root\[\e[01;36m\]@\h\[\e[00m\]:# '" >> ~root/.bashrc
+
 if [[ $(hostname) != "yuanying" ]]; then
     exit
 fi
