@@ -1,6 +1,35 @@
 # Service を処理しよう！
 
--   スライドで、Service の説明が必要。
+冗長化されたアプリケーションは通常、ロードバランサによって処理が分散されます。
+Kubernetes における基本的なロードバランサは Service と呼ばれています。
+
+## この章で学ぶこと
+
+-   Service とは
+-   ワーカノードは Service からどのようにロードバランサを設定しているのか
+
+## 解説
+
+### Service
+
+-   (Serviceの適当な説明をしてください、ラベルとかセレクタとか
+
+### kube-proxy
+
+Z社では、Pod network はトラディショナルな方法を採用しているが、Service networkに関しては先進的な IPVS mode を採用している。
+
+-   kube-proxy はクラスタ内にて Service で宣言されている L4 ロードバランサを各ノードでセットアップするコンポーネント
+-   ipvs mode の場合は、その実装に ipvs を利用する
+
+![kube-proxy](./assets/kube-proxy.png)
+
+### Service network
+
+IPVS modeではパケットのロードバランシングは主に IPVS によって処理されているが、Kubernetes の要件的に必要なマスカレードの処理などを (inajobに詳細は説明済み) iptables を利用して処理している。そのため、IPVS mode で必要となる iptables のレコードを Service を処理する前にセットアップしておく必要がある。
+
+![IPVS packet 01](./assets/ipvs-packet-01.png)
+
+もちろん、これらのセットアップは kube-proxy が行う。
 
 ## Endpoint Controller @master01 node で作業
 
@@ -72,6 +101,96 @@ kubectl get endpoints web-service
 sudo su
 ```
 
+### iptables の設定
+
+X社では Service を実現するのに IPVS を使っているので、その事前準備をする必要があります。
+しかし、 IPVS 単体ではマスカレードやパケットフィルタリングを実現することができないので、
+結局ちゃんと動作するように、iptables の設定をする必要があります。
+
+#### ipset の設定
+
+iptables に service が増えるたびにルールを増やして行くのはアホらしいので、ipset を使います。
+まずは事前に利用する set を追加しましょう。
+
+> 今回は nodeport や loadbalancer を使わないので、それらに関連するセットはセットアップしない。
+
+<!-- まずは、コンテナ内からの自身へのヘアピンパケットに対応するためのセットを追加します。
+
+```bash
+sudo ipset create KUBE-LOOP-BACK hash:ip,port,ip
+``` -->
+
+Service の IP である Cluster IP に対応するためのセットの追加です。
+ここには、全てのService IP が入ることになります。
+
+```bash
+sudo ipset create KUBE-CLUSTER-IP hash:ip,port
+```
+
+#### iptables rule の作成
+
+IPVS mode では dnat しかしないので、その他の filter や masquerade などを処理するために、一部 iptables を利用しているので、その設定を入れる。
+このルールは固定で、iptable mode のようにこれ以上増えることはありません。
+
+(今回のデモでは ClusterIP しか処理しないので、それに関連する iptables のルールを追加しています。)
+
+```bash
+sudo iptables -t nat -N KUBE-MARK-MASQ
+sudo iptables -t nat -A KUBE-MARK-MASQ -j MARK --set-xmark 0x4000/0x4000
+
+sudo iptables -t nat -N KUBE-POSTROUTING
+# kubernetes service traffic requiring SNAT
+sudo iptables -t nat -A KUBE-POSTROUTING -m comment --comment "kubernetes service traffic requiring SNAT" -m mark --mark 0x4000/0x4000 -j MASQUERADE
+
+sudo iptables -t nat -N KUBE-SERVICES
+# Kubernetes service cluster ip + port for masquerade purpose
+sudo iptables -t nat -A KUBE-SERVICES ! -s 10.244.0.0/16 -m comment --comment "Kubernetes service cluster ip + port for masquerade purpose" -m set --match-set KUBE-CLUSTER-IP dst,dst -j KUBE-MARK-MASQ
+sudo iptables -t nat -A KUBE-SERVICES -m set --match-set KUBE-CLUSTER-IP dst,dst -j ACCEPT
+
+# kubernetes service portals
+sudo iptables -t nat -I PREROUTING -m comment --comment "kubernetes service portals" -j KUBE-SERVICES
+sudo iptables -t nat -I OUTPUT -m comment --comment "kubernetes service portals" -j KUBE-SERVICES
+
+# kubernetes postrouting rules
+sudo iptables -t nat -I POSTROUTING -m comment --comment "kubernetes postrouting rules" -j KUBE-POSTROUTING
+
+sudo iptables -t filter -N KUBE-FORWARD
+# kubernetes forwarding rules
+sudo iptables -t filter -A KUBE-FORWARD -m comment --comment "kubernetes forwarding rules" -m mark --mark 0x4000/0x4000 -j ACCEPT
+# kubernetes forwarding conntrack pod source rule
+sudo iptables -t filter -A KUBE-FORWARD -s 10.244.0.0/16 -m comment --comment "kubernetes forwarding conntrack pod source rule" -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+# kubernetes forwarding conntrack pod destination rule
+sudo iptables -t filter -A KUBE-FORWARD -d 10.244.0.0/16 -m comment --comment "kubernetes forwarding conntrack pod destination rule" -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+# kubernetes forwarding rules
+sudo iptables -t filter -I FORWARD -m comment --comment "kubernetes forwarding rules" -j KUBE-FORWARD
+```
+
+### IPVS の初期設定
+
+それでは、IPVSを使うための初期設定をしていきましょう。
+
+#### カーネルモジュールの設定
+
+IPVS が conntrack の dnat の情報を消してしまうので、それを残すために必要。
+
+-   ref: [IPVS (LVS/NAT) とiptables DNAT targetの共存について調べた](https://ntoofu.github.io/blog/post/research-ipvs-and-dnat/)
+
+```bash
+echo 1 | sudo tee /proc/sys/net/ipv4/vs/conntrack
+```
+
+#### dummy interface の作成
+
+Service のパケットを受ける dummy のインタフェースを作成します。
+
+```bash
+sudo ip link add kube-ipvs0 type dummy
+```
+
+これで IPVS を使う準備が整いました。それでは、実際に Service のエンドポイントを登録していきます。
+
+### Service を IPVS mode で利用できるように設定
+
 それではまず、IPVS の Virtual Server を設定しましょう。 Virtual Server の VIP は service のアドレスとなります。
 
 ```
@@ -80,7 +199,22 @@ kubectl get services
 
 サービスのアドレスが `10.254.10.128:80` であることがわかりました。それでは Virtual Server を設定しましょう。
 
+その前に、IPVS mode の kube-proxy でも一部の機能で iptables を利用している関係上、
+iptables にサービスのアドレスを教える必要があります。
+
+```bash
+ipset add KUBE-CLUSTER-IP 10.254.10.128,tcp:80
 ```
+
+次に、IPVS の設定の一環として、入社時のセットアップで作成した dummy interface にサービスのアドレスを設定します。
+
+```bash
+ip addr add 10.254.10.128 dev kube-ipvs0
+```
+
+そして、IPVS の Virtual Server そのものを作成します。
+
+```bash
 ipvsadm -A -t 10.254.10.128:80 -s rr
 ```
 
@@ -111,7 +245,3 @@ VIP に対して curl コマンドを実行してみます。
 ```bash
 curl 10.254.10.128
 ```
-
-## ありそうな質問
-
--   Q: なんで Pod から直接じゃなくて、Endpointから kube-proxy はリアルサーバを作成するのか？

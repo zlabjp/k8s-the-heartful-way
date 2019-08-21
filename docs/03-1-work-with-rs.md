@@ -1,5 +1,30 @@
 # ReplicaSets を処理しよう！
 
+アプリケーションの可用性を意識した場合、通常はアプリケーションを冗長化します。
+それだけではなく、処理をスケールアウトしたい場合もあるでしょう。
+アプリケーションの冗長化を宣言するためのKubernetesのリソースがReplicaSetです。
+
+Kubernetes のユーザはもちろん、アプリケーションを冗長化しようとReplicaSetを利用します。
+
+## この章で学ぶこと
+
+-   Kubernetes はもちろん、アプリケーションの冗長性も ReplicaSet というオブジェクトを使って宣言します。
+-   宣言された ReplicaSet は、controller-manager によって処理されます。
+
+## 解説
+
+controller-manager の中にある、ReplicaSet Controller が RS を処理します。処理の流れは以下のようになります。
+
+![RS Controller](./assets/rs-controller-01.png)
+
+![RS Controller](./assets/rs-controller-02.png)
+
+![RS Controller](./assets/rs-controller-03.png)
+
+![RS Controller](./assets/rs-controller-04.png)
+
+![RS Controller](./assets/rs-controller-05.png)
+
 ## RS Controller @master01 node で作業
 
 -   マネージャーも兼任してます、とかウンタラカンタラ。
@@ -8,7 +33,7 @@
 状態が Desired とずれている ReplicaSet を取得します。
 
 ```bash
-kubectl get replicasets -o wide | grep --color -E "^|DESIRED|CURRENT"
+kubectl get replicasets -o wide -A | grep --color -E "^|DESIRED|CURRENT"
 ```
 
 web という名前の ReplicaSets が Desired の状態とずれていることがわかりますね！
@@ -16,7 +41,7 @@ web という名前の ReplicaSets が Desired の状態とずれていること
 それでは実際に条件に合う Pod が存在するか調べて見ましょう。
 
 ```bash
-kubectl get pod -l app=web
+kubectl get pod -l app=web -A
 ```
 
 ありませんね。そこで私、RS controllerという役職の出番です。
@@ -104,7 +129,7 @@ kubectl get node | grep --color -E "^|^yuanying.*$"
 X社は自由にリモートワークできる組織ですので、もちろんkubeletもリモートで担当することができます。
 
 ```bash
-$ NAMESPACE="default" POD_NAME="kuard" NODE_NAME="yuanying"
+$ NAMESPACE="default" POD_NAME="web-001" NODE_NAME="yuanying"
 $ cat <<EOL | tee web-yuanying-binding.yaml
 apiVersion: v1
 kind: Binding
@@ -131,7 +156,7 @@ kubectl get pod -o wide -w
 できたようです。リモートなのにちゃんと仕事してますね！
 本当はこの場所で一緒にプレゼンする予定だったのですが何故かリモートなんですね。なんででしょう？
 
-まあ、気にせずにちゃんと nginx が反応するか確認してみます。
+まあ、気にせずにちゃんと アプリケーション が反応するか確認してみます。
 
 ```
 # PodのIPの取得

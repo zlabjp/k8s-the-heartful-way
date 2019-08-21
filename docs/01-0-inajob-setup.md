@@ -1,12 +1,38 @@
 # 稲津くんの出社
 
-必要なツールはインストールしてあるから、設定しておいてねと言われる。
-(以下の説明は全て須田さんがやって、稲津さんは作業だけをする感じ？)
+## この章で学ぶこと
 
-1.  ネットワークの設定
-2.  ノードを登録
+-   ワーカーノードのセットアップ方法
+    -   ワーカーノードにはコンテナランタイムが必要。
+    -   Pod用のネットワークがセットアップされている必要がある。
+    -   セットアップが終わったワーカーノードは、Kubernetes の Node として登録できる。
+
+## 解説
+
+### Pod network
+
+Z社ではトラディショナルなStatic routingベースなPodネットワークを採用している。
+各ノードごとにPodネットワークのCIDRが割り当てられており、ノードを跨いだPod間の通信はノード上のルーティングテーブルによってパケットの行き先が解決される。
+そのため、各ノードに他のノードのPodネットワークへのルーティング情報を保持する必要がある。
+Flannel の host-gw モードも同じ仕組みを使って実現しているが、もちろんFlannelはその処理を自動化している。
+
+![Pod network](./assets/pod-network.png)
+
+これらの初期化は通常、CNI の各プラグインが起動時に行うことが多い。
+
+### Node の登録
 
 ## ネットワークの設定 @inajob node で作業
+
+### コンテナランタイムの確認
+
+docker はインストールされているからね、と須田さんに言われる。
+
+```bash
+docker version
+```
+
+### Pod network の設定
 
 TODO: スライドが欲しい。
 
@@ -106,8 +132,8 @@ STATUS=$(cat <<EOF
   "status": {
     "nodeInfo": {
       "kubeletVersion": "v1.15.0",
-      "osImage": "Human 1.0.zlab.new",
-      "kernelVersion": "Brain-Z-2019",
+      "osImage": "Human 1.0.new",
+      "kernelVersion": "4.15.2019-brain",
       "containerRuntimeVersion": "docker://18.6.3"
     },
     "addresses": [

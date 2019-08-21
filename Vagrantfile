@@ -116,6 +116,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         ].join(' ')
       end
       m.vm.provision :shell, path: "scripts/install-prerequisite.sh"
+      m.vm.provision :shell, path: "scripts/install-master.sh"
       m.vm.provision :shell, inline: "iptables -P FORWARD ACCEPT"
     end
   end
@@ -139,7 +140,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
         d.build_image "/vagrant/resources/app", args: "-t zlabjp/heartful-app:1"
       end
       w.vm.provision :shell, inline: "iptables -P FORWARD ACCEPT"
-      w.vm.provision :shell, path: "scripts/install-yuanying-node.sh"
+      w.vm.provision :shell, path: "scripts/install-node.sh"
     end
   end
 end
