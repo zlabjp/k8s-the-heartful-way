@@ -1,0 +1,137 @@
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: ainoya
+spec:
+  podCIDR: 10.244.3.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: bhiro
+spec:
+  podCIDR: 10.244.4.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: hatotaka
+spec:
+  podCIDR: 10.244.5.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: hiyoshi
+spec:
+  podCIDR: 10.244.6.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: kkohtaka
+spec:
+  podCIDR: 10.244.7.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: ladicle
+spec:
+  podCIDR: 10.244.8.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: mumoshu
+spec:
+  podCIDR: 10.244.9.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: ryysud
+spec:
+  podCIDR: 10.244.10.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: shmurata
+spec:
+  podCIDR: 10.244.11.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: summerwind
+spec:
+  podCIDR: 10.244.12.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: superbrothers
+spec:
+  podCIDR: 10.244.13.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: takanariko
+  labels:
+    node-role.kubernetes.io/president: ""
+spec:
+  podCIDR: 10.244.14.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: takuhiro
+spec:
+  podCIDR: 10.244.15.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: tatsuhiro-t
+spec:
+  podCIDR: 10.244.16.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: tksm
+spec:
+  podCIDR: 10.244.17.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: uesyn
+spec:
+  podCIDR: 10.244.18.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: watawuwu
+spec:
+  podCIDR: 10.244.19.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: ysakashita
+spec:
+  podCIDR: 10.244.20.0/24
+---
+apiVersion: v1
+kind: Node
+metadata:
+  name: yuanying
+  labels:
+    node-role.kubernetes.io/remote: ""
+spec:
+  podCIDR: 10.244.2.0/24

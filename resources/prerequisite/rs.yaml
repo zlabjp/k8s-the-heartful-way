@@ -1,0 +1,19 @@
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      schedulerName: human-scheduler
+      containers:
+        - name: nginx
+          image: "zlabjp/heartful-app:1"
