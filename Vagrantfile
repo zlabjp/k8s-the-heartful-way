@@ -1,5 +1,10 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
+# Copyright 2020 Z Lab Corporation. All rights reserved.
+#
+# For the full copyright and license information, please view the LICENSE
+# file that was distributed with this source code.
+
 VAGRANTFILE_API_VERSION = "2"
 
 require 'openssl'

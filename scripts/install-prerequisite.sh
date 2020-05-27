@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright 2020 Z Lab Corporation. All rights reserved.
+#
+# For the full copyright and license information, please view the LICENSE
+# file that was distributed with this source code.
 
 set -eu
 export LC_ALL=C
@@ -76,7 +80,7 @@ ADDRESS_SUFFIX=113
 for m in $MEMBERS; do
     ADDRESS="192.168.43.${ADDRESS_SUFFIX}"
     YEAR=$(( ( RANDOM % 20 )  + 2000 ))
-    if (( RANDOM % 2 )); then 
+    if (( RANDOM % 2 )); then
         STATUS=${READY}
     else
         STATUS=${NOTREADY}
