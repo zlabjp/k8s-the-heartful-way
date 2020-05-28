@@ -9,14 +9,25 @@ VAGRANTFILE_API_VERSION = "2"
 
 require 'openssl'
 require 'fileutils'
+require 'open-uri'
 
 ROOT_DIR = File.dirname(__FILE__)
-CACHE_DIR = ROOT_DIR + "/cache"
+CACHE_DIR = File.join(ROOT_DIR, "cache")
 
 FileUtils.mkdir_p(CACHE_DIR)
 
-CLUSTER_PRIVATE_KEY = ROOT_DIR + "/id_rsa"
-CLUSTER_PUBLIC_KEY  = ROOT_DIR + "/id_rsa.pub"
+CLUSTER_PRIVATE_KEY = File.join(ROOT_DIR, "id_rsa")
+CLUSTER_PUBLIC_KEY  = File.join(ROOT_DIR, "id_rsa.pub")
+
+unless File.file?(CLUSTER_PRIVATE_KEY)
+  key = OpenSSL::PKey::RSA.new 2048
+  File.open CLUSTER_PRIVATE_KEY, 'wb' do |f|
+    f.write key.export(nil, nil)
+  end
+  File.open CLUSTER_PUBLIC_KEY, 'wb' do |f|
+    f.write key.public_key.export(nil, nil)
+  end
+end
 
 KUBECTL_CACHE = File.join(CACHE_DIR, 'kubectl')
 CNI_PLUGIN_CACHE = File.join(CACHE_DIR, 'cni-plugin.tgz')
@@ -24,19 +35,23 @@ CNI_PLUGIN_CACHE = File.join(CACHE_DIR, 'cni-plugin.tgz')
 cluster_ssh_private_key = nil
 cluster_ssh_public_key = nil
 
-unless File.file?(CLUSTER_PRIVATE_KEY)
-  `ssh-keygen -t rsa -N "" -b 4096 -f #{ROOT_DIR}/id_rsa`
-end
-
 open(CLUSTER_PRIVATE_KEY) {|io| cluster_ssh_private_key = io.read}
 open(CLUSTER_PUBLIC_KEY) {|io| cluster_ssh_public_key = io.read}
 
 unless File.file?(KUBECTL_CACHE)
-  `curl -s -L https://storage.googleapis.com/kubernetes-release/release/v1.18.2/bin/linux/amd64/kubectl > #{KUBECTL_CACHE}`
+  open("https://storage.googleapis.com/kubernetes-release/release/v1.18.2/bin/linux/amd64/kubectl") do |i|
+    open(KUBECTL_CACHE, 'w') do |o|
+      o.write(i.read)
+    end
+  end
 end
 
 unless File.file?(CNI_PLUGIN_CACHE)
-  `curl -L https://github.com/containernetworking/plugins/releases/download/v0.7.1/cni-plugins-amd64-v0.7.1.tgz > #{CNI_PLUGIN_CACHE}`
+  open("https://github.com/containernetworking/plugins/releases/download/v0.7.1/cni-plugins-amd64-v0.7.1.tgz") do |i|
+    open(CNI_PLUGIN_CACHE, 'w') do |o|
+      o.write(i.read)
+    end
+  end
 end
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
